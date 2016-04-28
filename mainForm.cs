@@ -117,8 +117,8 @@ namespace Report_generator
             string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             string targetPath = System.IO.Path.Combine(desktopPath, "temp.xlsx");
             //newWorkBook.SaveAs(targetPath);
-            var fun = new JazzyFunctionsByPatryk_ver030216_1();
-            if(fun.DataTableToExcelFile(excelSheetDataTable,targetPath)==true)
+            var exM = new ExcelManager();
+            if (exM.DataTableToExcelFile(excelSheetDataTable, targetPath) == true)
             {
                 MessageBox.Show("Your file has been created/n" + targetPath);
             }
@@ -129,6 +129,11 @@ namespace Report_generator
             
             
             //Environment.Exit(0);
+        }
+
+        private void excelFileSheetsComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }
