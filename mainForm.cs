@@ -8,132 +8,69 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using Microsoft.Office.Interop.Excel;
+/*Developer Comment*/
+//Rough note (ignore it)
 
 namespace Report_generator
 {
     public partial class mainForm : Form
     {
-        public string queryString;
-        public System.Data.DataTable excelSheetDataTable;
-        public mainForm()
-        {
-            InitializeComponent();
-        }
-
-        private void queryLoadButton_Click(object sender, EventArgs e)
-        {
-            //Prepare SQL Query
-            if (queryTextBox.Text == "")
-                queryTextBox.Text = "SELECT * FROM [" + excelFileSheetsComboBox.Text + "$]"; //+ "$B1:G3]"
-
-            queryString = this.queryTextBox.Text;
-
-            //Preparing database connection
-            string excelFilePath = System.IO.Path.GetExtension(this.excelFilePathTextbox.Text);
-            string connectionPropertiesExcelVersion = string.Empty;
-
-            switch (excelFilePath)
-            {
-                case ".xls":
-                    connectionPropertiesExcelVersion = "\"Excel 8.0";
-                    break;
-                case ".xlsx":
-                    connectionPropertiesExcelVersion = "\"Excel 12.0 Xml";
-                    break;
-                case ".xlsm":
-                    connectionPropertiesExcelVersion = "\"Excel 12.0 Macro";
-                    break;
-                default:
-                    MessageBox.Show("Invalid data type. The only acceptable extensions are: .xls .xlsx .xlsm");
-                    return;
-            }
-
-            string connectionProperties = connectionPropertiesExcelVersion + "; HDR=YES\";"; //HDR means that the first row is header
-            string excelFileConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0; Data Source=" + this.excelFilePathTextbox.Text
-                + "; Extended Properties=" + connectionProperties;
-
-            //Establish connection
-            var excelFileConnection = new System.Data.OleDb.OleDbConnection(excelFileConnectionString);
-            var excelSheetDataAdapter = new System.Data.OleDb.OleDbDataAdapter(queryString, excelFileConnection);
-            excelSheetDataTable = new System.Data.DataTable();
-
-            //Extract data into data grid on form
-            try
-            {
-                excelSheetDataAdapter.Fill(excelSheetDataTable);
-                this.excelQueryGridView.DataSource = excelSheetDataTable;
-            }
-            catch
-            {
-                MessageBox.Show("Connection failed. Check the SQL query.");
-            }
-            finally
-            {
-                excelFileConnection.Close();
-            }
-        }
-
+        /**/
+        public JazzyFunctionsByPatryk jf;
+        public mainForm() { InitializeComponent(); jf = new JazzyFunctionsByPatryk(); }
         private void excelFilePathButton_Click(object sender, EventArgs e)
         {
-            OpenFileDialog excelFilePathOpenFileDialog = new OpenFileDialog();
-            excelFilePathOpenFileDialog.Filter = "Excel Files|*.xlsx;*.xls;*.xlsm";
-            if (excelFilePathOpenFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                this.excelFilePathTextbox.Text = excelFilePathOpenFileDialog.FileName;
+            /*Allow the user to browse for eligible Excel file*/
+            string workbookPath = jf.BrowseFilePath("Excel Files|*.xlsx;*.xls;*.xlsm");
+            this.excelFilePathTextbox.Text = workbookPath;
 
-                var excelApp = new Microsoft.Office.Interop.Excel.Application();
+            /*Fill the sheets list*/
+            string connectionString = jf.GetConnectionStringExcel(workbookPath);
+            if (connectionString == "") { MessageBox.Show("Could not load the sheets from the chosen Excel file."); return; }
 
-                string workbookPath = this.excelFilePathTextbox.Text;
-                Workbook excelWorkbook = null;
-                try
-                {
-                    excelWorkbook = excelApp.Workbooks.Open(Filename: workbookPath, ReadOnly: true);
+            var excelFileSheetsList = jf.ListSheetInExcel(connectionString);
+            this.excelFileSheetsComboBox.DataSource = excelFileSheetsList;
 
-                    var excelFileSheetsList = new List<string>();
-
-                    foreach (Microsoft.Office.Interop.Excel.Worksheet worksheet in excelWorkbook.Worksheets)
-                        excelFileSheetsList.Add(worksheet.Name);
-
-                    this.excelFileSheetsComboBox.DataSource = excelFileSheetsList;
-                }
-                catch
-                {
-                    MessageBox.Show("Could not load the sheets from the chosen Excel file.");
-                }
-                finally
-                {
-                    excelWorkbook.Close();
-                }
-            }
+            this.queryLoadButton.Enabled = true;
         }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            //XLWorkbook newWorkBook = new XLWorkbook();
-            //newWorkBook.Worksheets.Add(excelSheetDataTable, "Report");
-            ////ClosedXML.Excel.IXLWorksheet ws = newWorkBook.Worksheets.;
-
-            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            string targetPath = System.IO.Path.Combine(desktopPath, "temp.xlsx");
-            //newWorkBook.SaveAs(targetPath);
-            var exM = new ExcelManager();
-            if (exM.DataTableToExcelFile(excelSheetDataTable, targetPath) == true)
-            {
-                MessageBox.Show("Your file has been created/n" + targetPath);
-            }
-            else
-            {
-                MessageBox.Show("Something went wrong");
-            }
-            
-            
-            //Environment.Exit(0);
-        }
-
         private void excelFileSheetsComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
+            /*Fill the fields list*/
+        }
+        private void queryLoadButton_Click(object sender, EventArgs e)
+        {
+            /*Verify user input*/
+            /*Load query to data grid or return connection error*/
 
+            //test below
+            System.Data.DataTable excelSheetDataTable;
+            //Prepare SQL Query
+            string queryString = queryTextBox.Text;
+            if (queryString == "") { queryString = "SELECT * FROM [" + this.excelFileSheetsComboBox.Text + "$]"; /*+ "$B1:G3]"*/ }
+            this.queryTextBox.Text = queryString;
+
+            //Preparing database connection
+            var jf = new JazzyFunctionsByPatryk();
+            string excelFileConnectionString = jf.GetConnectionStringExcel(this.excelFilePathTextbox.Text);
+
+            //Create data table
+            excelSheetDataTable = jf.GetDataTable(excelFileConnectionString, queryString);
+
+            //Extract data into data grid on form
+            if (excelSheetDataTable != null)
+            { if (excelSheetDataTable.Rows.Count > 0) { this.excelQueryGridView.DataSource = excelSheetDataTable; queryTextBox.Text = queryString; } }
+            this.exportToExcelButton.Enabled = true;
+        }
+        private void exportToExcelButton_Click(object sender, EventArgs e)
+        {
+            /*Ask for the target location*/
+            /*Save in XLS*/
+
+            //test
+            string savePath = jf.BrowseSavePath("csv");
+            //BindingSource bs = (BindingSource)this.excelQueryGridView.DataSource; // Se convierte el DataSource 
+            //DataTable tCxC = (DataTable)bs.DataSource;
+            jf.DataTableToCSVFile(this.excelQueryGridView.DataSource as DataTable, savePath);
         }
     }
 }

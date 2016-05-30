@@ -36,9 +36,7 @@
             this.excelSourceFilePathButton = new System.Windows.Forms.Button();
             this.excelFilePathTextbox = new System.Windows.Forms.TextBox();
             this.queryLoadButton = new System.Windows.Forms.Button();
-            this.button1 = new System.Windows.Forms.Button();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
+            this.exportToExcelButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.excelQueryGridView)).BeginInit();
             this.SuspendLayout();
             // 
@@ -47,7 +45,7 @@
             this.excelFileSheetsComboBox.FormattingEnabled = true;
             this.excelFileSheetsComboBox.Location = new System.Drawing.Point(92, 71);
             this.excelFileSheetsComboBox.Name = "excelFileSheetsComboBox";
-            this.excelFileSheetsComboBox.Size = new System.Drawing.Size(193, 21);
+            this.excelFileSheetsComboBox.Size = new System.Drawing.Size(308, 21);
             this.excelFileSheetsComboBox.TabIndex = 25;
             this.excelFileSheetsComboBox.SelectedIndexChanged += new System.EventHandler(this.excelFileSheetsComboBox_SelectedIndexChanged);
             // 
@@ -65,8 +63,9 @@
             // 
             this.queryTextBox.BackColor = System.Drawing.SystemColors.Window;
             this.queryTextBox.Location = new System.Drawing.Point(94, 124);
+            this.queryTextBox.Multiline = true;
             this.queryTextBox.Name = "queryTextBox";
-            this.queryTextBox.Size = new System.Drawing.Size(507, 20);
+            this.queryTextBox.Size = new System.Drawing.Size(506, 39);
             this.queryTextBox.TabIndex = 23;
             // 
             // label1
@@ -82,9 +81,9 @@
             // excelQueryGridView
             // 
             this.excelQueryGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.excelQueryGridView.Location = new System.Drawing.Point(12, 151);
+            this.excelQueryGridView.Location = new System.Drawing.Point(12, 179);
             this.excelQueryGridView.Name = "excelQueryGridView";
-            this.excelQueryGridView.Size = new System.Drawing.Size(589, 219);
+            this.excelQueryGridView.Size = new System.Drawing.Size(589, 354);
             this.excelQueryGridView.TabIndex = 21;
             // 
             // excelSourceFilePathButton
@@ -101,11 +100,13 @@
             // 
             this.excelFilePathTextbox.Location = new System.Drawing.Point(92, 44);
             this.excelFilePathTextbox.Name = "excelFilePathTextbox";
+            this.excelFilePathTextbox.ReadOnly = true;
             this.excelFilePathTextbox.Size = new System.Drawing.Size(508, 20);
             this.excelFilePathTextbox.TabIndex = 19;
             // 
             // queryLoadButton
             // 
+            this.queryLoadButton.Enabled = false;
             this.queryLoadButton.Location = new System.Drawing.Point(12, 122);
             this.queryLoadButton.Name = "queryLoadButton";
             this.queryLoadButton.Size = new System.Drawing.Size(75, 23);
@@ -114,45 +115,23 @@
             this.queryLoadButton.UseVisualStyleBackColor = true;
             this.queryLoadButton.Click += new System.EventHandler(this.queryLoadButton_Click);
             // 
-            // button1
+            // exportToExcelButton
             // 
-            this.button1.Enabled = false;
-            this.button1.Location = new System.Drawing.Point(501, 99);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(99, 23);
-            this.button1.TabIndex = 26;
-            this.button1.Text = "Export to Excel";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.Location = new System.Drawing.Point(612, 9);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(70, 25);
-            this.label3.TabIndex = 27;
-            this.label3.Text = "Fields";
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.Location = new System.Drawing.Point(804, 9);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(85, 25);
-            this.label4.TabIndex = 28;
-            this.label4.Text = "Presets";
+            this.exportToExcelButton.Enabled = false;
+            this.exportToExcelButton.Location = new System.Drawing.Point(501, 99);
+            this.exportToExcelButton.Name = "exportToExcelButton";
+            this.exportToExcelButton.Size = new System.Drawing.Size(99, 23);
+            this.exportToExcelButton.TabIndex = 26;
+            this.exportToExcelButton.Text = "Export to CSV";
+            this.exportToExcelButton.UseVisualStyleBackColor = true;
+            this.exportToExcelButton.Click += new System.EventHandler(this.exportToExcelButton_Click);
             // 
             // mainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(955, 385);
-            this.Controls.Add(this.label4);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.button1);
+            this.ClientSize = new System.Drawing.Size(617, 545);
+            this.Controls.Add(this.exportToExcelButton);
             this.Controls.Add(this.excelFileSheetsComboBox);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.queryTextBox);
@@ -179,9 +158,7 @@
         private System.Windows.Forms.Button excelSourceFilePathButton;
         private System.Windows.Forms.TextBox excelFilePathTextbox;
         private System.Windows.Forms.Button queryLoadButton;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Button exportToExcelButton;
     }
 }
 
