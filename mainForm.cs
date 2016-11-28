@@ -46,7 +46,7 @@ namespace Report_generator
             System.Data.DataTable excelSheetDataTable;
             //Prepare SQL Query
             string queryString = queryTextBox.Text;
-            if (queryString == "") { queryString = "SELECT * FROM [" + this.excelFileSheetsComboBox.Text + "$]"; /*+ "$B1:G3]"*/ }
+            if (queryString == "") { queryString = "SELECT * FROM [" + this.excelFileSheetsComboBox.Text.Replace("'","") + "$]"; /*+ "$B1:G3]"*/ }
             this.queryTextBox.Text = queryString;
 
             //Preparing database connection
@@ -57,8 +57,9 @@ namespace Report_generator
             excelSheetDataTable = jf.GetDataTable(excelFileConnectionString, queryString);
 
             //Extract data into data grid on form
-            if (excelSheetDataTable != null)
-            { if (excelSheetDataTable.Rows.Count > 0) { this.excelQueryGridView.DataSource = excelSheetDataTable; queryTextBox.Text = queryString; } }
+            //if (excelSheetDataTable != null)
+            //{ if (excelSheetDataTable.Rows.Count > 0) { this.excelQueryGridView.DataSource = excelSheetDataTable; queryTextBox.Text = queryString; } }
+            this.excelQueryGridView.DataSource = excelSheetDataTable; queryTextBox.Text = queryString;
             this.exportToExcelButton.Enabled = true;
         }
         private void exportToExcelButton_Click(object sender, EventArgs e)
