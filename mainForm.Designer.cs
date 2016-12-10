@@ -37,10 +37,9 @@
             this.excelFilePathTextbox = new System.Windows.Forms.TextBox();
             this.queryLoadButton = new System.Windows.Forms.Button();
             this.exportToExcelButton = new System.Windows.Forms.Button();
-            this.tableListView = new System.Windows.Forms.ListView();
+            this.dataObjectsListView = new System.Windows.Forms.ListView();
             this.label3 = new System.Windows.Forms.Label();
             this.tableAddButton = new System.Windows.Forms.Button();
-            this.tableEditButton = new System.Windows.Forms.Button();
             this.tableDeleteButton = new System.Windows.Forms.Button();
             this.masterButton = new System.Windows.Forms.Button();
             this.quitButton = new System.Windows.Forms.Button();
@@ -49,6 +48,8 @@
             this.masterQueryLoadButton = new System.Windows.Forms.Button();
             this.masterQueryExportToExcelButton = new System.Windows.Forms.Button();
             this.masterQueryTextBox = new System.Windows.Forms.TextBox();
+            this.columnHeaderDataObject = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.tableEditButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.previewGridView)).BeginInit();
             this.SuspendLayout();
             // 
@@ -138,13 +139,20 @@
             this.exportToExcelButton.UseVisualStyleBackColor = true;
             this.exportToExcelButton.Click += new System.EventHandler(this.exportToExcelButton_Click);
             // 
-            // tableListView
+            // dataObjectsListView
             // 
-            this.tableListView.Location = new System.Drawing.Point(102, 170);
-            this.tableListView.Name = "tableListView";
-            this.tableListView.Size = new System.Drawing.Size(166, 81);
-            this.tableListView.TabIndex = 27;
-            this.tableListView.UseCompatibleStateImageBehavior = false;
+            this.dataObjectsListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeaderDataObject});
+            this.dataObjectsListView.FullRowSelect = true;
+            this.dataObjectsListView.HideSelection = false;
+            this.dataObjectsListView.Location = new System.Drawing.Point(102, 170);
+            this.dataObjectsListView.MultiSelect = false;
+            this.dataObjectsListView.Name = "dataObjectsListView";
+            this.dataObjectsListView.Size = new System.Drawing.Size(166, 88);
+            this.dataObjectsListView.TabIndex = 27;
+            this.dataObjectsListView.UseCompatibleStateImageBehavior = false;
+            this.dataObjectsListView.View = System.Windows.Forms.View.Details;
+            this.dataObjectsListView.SelectedIndexChanged += new System.EventHandler(this.dataObjectsListView_SelectedIndexChanged);
             // 
             // label3
             // 
@@ -152,34 +160,25 @@
             this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label3.Location = new System.Drawing.Point(16, 142);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(139, 25);
+            this.label3.Size = new System.Drawing.Size(132, 25);
             this.label3.TabIndex = 28;
-            this.label3.Text = "Data sources";
+            this.label3.Text = "Data objects";
             // 
             // tableAddButton
             // 
             this.tableAddButton.Location = new System.Drawing.Point(21, 170);
             this.tableAddButton.Name = "tableAddButton";
-            this.tableAddButton.Size = new System.Drawing.Size(75, 23);
+            this.tableAddButton.Size = new System.Drawing.Size(75, 26);
             this.tableAddButton.TabIndex = 29;
             this.tableAddButton.Text = "ADD";
             this.tableAddButton.UseVisualStyleBackColor = true;
             this.tableAddButton.Click += new System.EventHandler(this.tableAddButton_Click);
             // 
-            // tableEditButton
-            // 
-            this.tableEditButton.Location = new System.Drawing.Point(21, 199);
-            this.tableEditButton.Name = "tableEditButton";
-            this.tableEditButton.Size = new System.Drawing.Size(75, 23);
-            this.tableEditButton.TabIndex = 30;
-            this.tableEditButton.Text = "EDIT";
-            this.tableEditButton.UseVisualStyleBackColor = true;
-            // 
             // tableDeleteButton
             // 
-            this.tableDeleteButton.Location = new System.Drawing.Point(21, 228);
+            this.tableDeleteButton.Location = new System.Drawing.Point(21, 233);
             this.tableDeleteButton.Name = "tableDeleteButton";
-            this.tableDeleteButton.Size = new System.Drawing.Size(75, 23);
+            this.tableDeleteButton.Size = new System.Drawing.Size(75, 25);
             this.tableDeleteButton.TabIndex = 31;
             this.tableDeleteButton.Text = "DELETE";
             this.tableDeleteButton.UseVisualStyleBackColor = true;
@@ -233,6 +232,7 @@
             this.masterQueryLoadButton.TabIndex = 35;
             this.masterQueryLoadButton.Text = "Load query";
             this.masterQueryLoadButton.UseVisualStyleBackColor = true;
+            this.masterQueryLoadButton.Click += new System.EventHandler(this.masterQueryLoadButton_Click);
             // 
             // masterQueryExportToExcelButton
             // 
@@ -253,12 +253,27 @@
             this.masterQueryTextBox.Size = new System.Drawing.Size(650, 82);
             this.masterQueryTextBox.TabIndex = 37;
             // 
+            // columnHeaderDataObject
+            // 
+            this.columnHeaderDataObject.Text = "Data objects";
+            this.columnHeaderDataObject.Width = 162;
+            // 
+            // tableEditButton
+            // 
+            this.tableEditButton.Location = new System.Drawing.Point(21, 202);
+            this.tableEditButton.Name = "tableEditButton";
+            this.tableEditButton.Size = new System.Drawing.Size(75, 26);
+            this.tableEditButton.TabIndex = 38;
+            this.tableEditButton.Text = "EDIT";
+            this.tableEditButton.UseVisualStyleBackColor = true;
+            // 
             // mainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(952, 618);
             this.ControlBox = false;
+            this.Controls.Add(this.tableEditButton);
             this.Controls.Add(this.masterQueryExportToExcelButton);
             this.Controls.Add(this.masterQueryLoadButton);
             this.Controls.Add(this.groupBox2);
@@ -266,10 +281,9 @@
             this.Controls.Add(this.quitButton);
             this.Controls.Add(this.masterButton);
             this.Controls.Add(this.tableDeleteButton);
-            this.Controls.Add(this.tableEditButton);
             this.Controls.Add(this.tableAddButton);
             this.Controls.Add(this.label3);
-            this.Controls.Add(this.tableListView);
+            this.Controls.Add(this.dataObjectsListView);
             this.Controls.Add(this.exportToExcelButton);
             this.Controls.Add(this.excelFileSheetsComboBox);
             this.Controls.Add(this.flexiLabel);
@@ -300,10 +314,9 @@
         private System.Windows.Forms.TextBox excelFilePathTextbox;
         private System.Windows.Forms.Button queryLoadButton;
         private System.Windows.Forms.Button exportToExcelButton;
-        private System.Windows.Forms.ListView tableListView;
+        private System.Windows.Forms.ListView dataObjectsListView;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button tableAddButton;
-        private System.Windows.Forms.Button tableEditButton;
         private System.Windows.Forms.Button tableDeleteButton;
         private System.Windows.Forms.Button masterButton;
         private System.Windows.Forms.Button quitButton;
@@ -312,6 +325,8 @@
         private System.Windows.Forms.Button masterQueryLoadButton;
         private System.Windows.Forms.Button masterQueryExportToExcelButton;
         private System.Windows.Forms.TextBox masterQueryTextBox;
+        private System.Windows.Forms.ColumnHeader columnHeaderDataObject;
+        private System.Windows.Forms.Button tableEditButton;
     }
 }
 

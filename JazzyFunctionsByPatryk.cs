@@ -10,20 +10,14 @@ using System.Windows.Forms;
 
 namespace Report_generator
 {
-    public class JazzyFunctionsByPatryk //ver250516_1
+    public static class JazzyFunctionsByPatryk //ver071216_1
     {
-        public string queryString;
-        public string connectionStringExcel;
+        public static string queryString;
+        public static string connectionStringExcel;
 
-        public void SetQueryString(string qs)
-        {
-            queryString = qs;
-        }
-        public void SetConnectionStringExcel(string excelFilePath)
-        {
-            connectionStringExcel = GetConnectionStringExcel(excelFilePath);
-        }
-        public void DataTableToCSVFile(System.Data.DataTable dt, string targetPath)
+        //public void SetQueryString(string qs) { queryString = qs; }
+        //public void SetConnectionStringExcel(string excelFilePath) { connectionStringExcel = GetConnectionStringExcel(excelFilePath); }
+        public static void DataTableToCSVFile(System.Data.DataTable dt, string targetPath)
         {
             StringBuilder sb = new StringBuilder();
 
@@ -41,7 +35,7 @@ namespace Report_generator
 
             File.WriteAllText(targetPath, sb.ToString());
         }
-        public System.Data.DataTable GetDataTable(string connectionString, string queryString)
+        public static System.Data.DataTable GetDataTable(string connectionString, string queryString)
         {
             //Establish connection
             var fileConnection = new System.Data.OleDb.OleDbConnection(connectionString);
@@ -55,7 +49,7 @@ namespace Report_generator
 
             return dataTable;
         }
-        public string GetConnectionStringExcel(string excelFilePath)
+        public static string GetConnectionStringExcel(string excelFilePath)
         {
             var sbConnection = new OleDbConnectionStringBuilder();
             string strExtendedProperties = string.Empty;
@@ -90,7 +84,7 @@ namespace Report_generator
             //string excelFileConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0; Data Source=" + excelFilePath
             //    + "; Extended Properties=" + connectionProperties;
         }
-        public List<string> ListSheetInExcel(string connectionString)
+        public static List<string> ListSheetInExcel(string connectionString)
         {
             var listSheet = new List<string>();
             using (var conn = new OleDbConnection(connectionString)) //sbConnection.ToString()))
@@ -108,7 +102,7 @@ namespace Report_generator
             }
             return listSheet;
         }
-        public string BrowseSavePath(string extension = "") //BrowseSavePath and BrowseFilePath will be refactored into one
+        public static string BrowseSavePath(string extension = "") //BrowseSavePath and BrowseFilePath will be refactored into one
         {
             string filter;
             if (extension == "") { filter = "All files (*.*)|*.*"; } else { filter = "(*." + extension + ")|*." + extension; }
@@ -118,7 +112,7 @@ namespace Report_generator
 
             if (sfd.ShowDialog() == DialogResult.OK) { return sfd.FileName; } else { return ""; }
         }
-        public string BrowseFilePath(string browseFilter = "") //string extension = "", 
+        public static string BrowseFilePath(string browseFilter = "") //string extension = "", 
         {
             string filter;
             if (browseFilter == "") { filter = "All files (*.*)|*.*"; } else { filter = browseFilter; }// "(*." + extension + ")|*." + extension; }
@@ -129,75 +123,75 @@ namespace Report_generator
 
             if (ofd.ShowDialog() == DialogResult.OK) { return ofd.FileName; } else { return ""; }
         }
-        public string GetHTMLStringFromDataTable(System.Data.DataTable dt, bool enableOuterMarkupTags = true)
-        {
-            //Convert date columns to string w/o time if 
-            foreach (System.Data.DataColumn myColumn in dt.Columns)
-            {
-                //todo ; convert dates to string and cut " 00:00:00" that way will keep dates with time other than 0
+        //public string GetHTMLStringFromDataTable(System.Data.DataTable dt, bool enableOuterMarkupTags = true)
+        //{
+        //    //Convert date columns to string w/o time if 
+        //    foreach (System.Data.DataColumn myColumn in dt.Columns)
+        //    {
+        //        //todo ; convert dates to string and cut " 00:00:00" that way will keep dates with time other than 0
 
-            }
+        //    }
 
-            StringBuilder strHTMLBuilder = new StringBuilder();
+        //    StringBuilder strHTMLBuilder = new StringBuilder();
 
-            //Open structure tags
-            if (enableOuterMarkupTags)
-            {
-                strHTMLBuilder.Append("<html >");
-                strHTMLBuilder.Append("<head>");
-                strHTMLBuilder.Append("</head>");
-                strHTMLBuilder.Append("<body>");
-            }
+        //    //Open structure tags
+        //    if (enableOuterMarkupTags)
+        //    {
+        //        strHTMLBuilder.Append("<html >");
+        //        strHTMLBuilder.Append("<head>");
+        //        strHTMLBuilder.Append("</head>");
+        //        strHTMLBuilder.Append("<body>");
+        //    }
 
-            //Table tags
-            //Table properties
-            strHTMLBuilder.Append("<table >"/* + 
-                "border='1px' " +
-                "cellpadding='5px' " +
-                "cellspacing='0px' " +
-                "bgcolor='lightyellow' " +
-                "style='font-family:Garamond; font-size:smaller'>"*/
-                );
+        //    //Table tags
+        //    //Table properties
+        //    strHTMLBuilder.Append("<table >"/* + 
+        //        "border='1px' " +
+        //        "cellpadding='5px' " +
+        //        "cellspacing='0px' " +
+        //        "bgcolor='lightyellow' " +
+        //        "style='font-family:Garamond; font-size:smaller'>"*/
+        //        );
 
-            //Header
-            strHTMLBuilder.Append("<tr >");
-            foreach (System.Data.DataColumn myColumn in dt.Columns)
-            {
-                strHTMLBuilder.Append("<td >");
-                strHTMLBuilder.Append(myColumn.ColumnName);
-                strHTMLBuilder.Append("</td>");
+        //    //Header
+        //    strHTMLBuilder.Append("<tr >");
+        //    foreach (System.Data.DataColumn myColumn in dt.Columns)
+        //    {
+        //        strHTMLBuilder.Append("<td >");
+        //        strHTMLBuilder.Append(myColumn.ColumnName);
+        //        strHTMLBuilder.Append("</td>");
 
-            }
-            strHTMLBuilder.Append("</tr>");
+        //    }
+        //    strHTMLBuilder.Append("</tr>");
 
-            //Rows
-            foreach (System.Data.DataRow myRow in dt.Rows)
-            {
+        //    //Rows
+        //    foreach (System.Data.DataRow myRow in dt.Rows)
+        //    {
 
-                strHTMLBuilder.Append("<tr >");
-                //Columns
-                foreach (System.Data.DataColumn myColumn in dt.Columns)
-                {
-                    strHTMLBuilder.Append("<td >");
-                    strHTMLBuilder.Append(myRow[myColumn.ColumnName].ToString());
-                    strHTMLBuilder.Append("</td>");
+        //        strHTMLBuilder.Append("<tr >");
+        //        //Columns
+        //        foreach (System.Data.DataColumn myColumn in dt.Columns)
+        //        {
+        //            strHTMLBuilder.Append("<td >");
+        //            strHTMLBuilder.Append(myRow[myColumn.ColumnName].ToString());
+        //            strHTMLBuilder.Append("</td>");
 
-                }
-                strHTMLBuilder.Append("</tr>");
-            }
-            strHTMLBuilder.Append("</table>");
+        //        }
+        //        strHTMLBuilder.Append("</tr>");
+        //    }
+        //    strHTMLBuilder.Append("</table>");
 
-            //Close tags
-            if (enableOuterMarkupTags)
-            {
-                strHTMLBuilder.Append("</body>");
-                strHTMLBuilder.Append("</html>");
-            }
+        //    //Close tags
+        //    if (enableOuterMarkupTags)
+        //    {
+        //        strHTMLBuilder.Append("</body>");
+        //        strHTMLBuilder.Append("</html>");
+        //    }
 
-            //Output
-            string returnString = strHTMLBuilder.ToString();
-            return returnString;
-        }
+        //    //Output
+        //    string returnString = strHTMLBuilder.ToString();
+        //    return returnString;
+        //}
 
     }
 }

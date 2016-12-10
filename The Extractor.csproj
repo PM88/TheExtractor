@@ -51,7 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataSource.cs" />
+    <Compile Include="DataObject.cs" />
     <Compile Include="JazzyFunctionsByPatryk.cs" />
     <Compile Include="mainForm.cs">
       <SubType>Form</SubType>
