@@ -38,6 +38,7 @@
             this.queryLoadButton = new System.Windows.Forms.Button();
             this.exportToExcelButton = new System.Windows.Forms.Button();
             this.dataObjectsListView = new System.Windows.Forms.ListView();
+            this.columnHeaderDataObject = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.label3 = new System.Windows.Forms.Label();
             this.tableAddButton = new System.Windows.Forms.Button();
             this.tableDeleteButton = new System.Windows.Forms.Button();
@@ -46,11 +47,16 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.masterQueryLoadButton = new System.Windows.Forms.Button();
-            this.masterQueryExportToExcelButton = new System.Windows.Forms.Button();
             this.masterQueryTextBox = new System.Windows.Forms.TextBox();
-            this.columnHeaderDataObject = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.tableEditButton = new System.Windows.Forms.Button();
+            this.button1 = new System.Windows.Forms.Button();
+            this.button2 = new System.Windows.Forms.Button();
+            this.saveDataObjectButton = new System.Windows.Forms.Button();
+            this.sourceTypesGroupBox = new System.Windows.Forms.GroupBox();
+            this.sourceSharePointRadioButton = new System.Windows.Forms.RadioButton();
+            this.sourceExcelRadioButton = new System.Windows.Forms.RadioButton();
             ((System.ComponentModel.ISupportInitialize)(this.previewGridView)).BeginInit();
+            this.sourceTypesGroupBox.SuspendLayout();
             this.SuspendLayout();
             // 
             // excelFileSheetsComboBox
@@ -60,6 +66,7 @@
             this.excelFileSheetsComboBox.Name = "excelFileSheetsComboBox";
             this.excelFileSheetsComboBox.Size = new System.Drawing.Size(278, 21);
             this.excelFileSheetsComboBox.TabIndex = 25;
+            this.excelFileSheetsComboBox.Visible = false;
             this.excelFileSheetsComboBox.SelectedIndexChanged += new System.EventHandler(this.excelFileSheetsComboBox_SelectedIndexChanged);
             // 
             // flexiLabel
@@ -75,6 +82,7 @@
             // queryTextBox
             // 
             this.queryTextBox.BackColor = System.Drawing.SystemColors.Window;
+            this.queryTextBox.Enabled = false;
             this.queryTextBox.Location = new System.Drawing.Point(386, 175);
             this.queryTextBox.Multiline = true;
             this.queryTextBox.Name = "queryTextBox";
@@ -96,7 +104,7 @@
             this.previewGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.previewGridView.Location = new System.Drawing.Point(12, 264);
             this.previewGridView.Name = "previewGridView";
-            this.previewGridView.Size = new System.Drawing.Size(928, 342);
+            this.previewGridView.Size = new System.Drawing.Size(928, 323);
             this.previewGridView.TabIndex = 21;
             // 
             // excelFileBrowsePathButton
@@ -107,15 +115,16 @@
             this.excelFileBrowsePathButton.TabIndex = 20;
             this.excelFileBrowsePathButton.Text = "Browse";
             this.excelFileBrowsePathButton.UseVisualStyleBackColor = true;
+            this.excelFileBrowsePathButton.Visible = false;
             this.excelFileBrowsePathButton.Click += new System.EventHandler(this.excelFilePathButton_Click);
             // 
             // excelFilePathTextbox
             // 
             this.excelFilePathTextbox.Location = new System.Drawing.Point(386, 71);
             this.excelFilePathTextbox.Name = "excelFilePathTextbox";
-            this.excelFilePathTextbox.ReadOnly = true;
             this.excelFilePathTextbox.Size = new System.Drawing.Size(554, 20);
             this.excelFilePathTextbox.TabIndex = 19;
+            this.excelFilePathTextbox.Visible = false;
             // 
             // queryLoadButton
             // 
@@ -131,9 +140,9 @@
             // exportToExcelButton
             // 
             this.exportToExcelButton.Enabled = false;
-            this.exportToExcelButton.Location = new System.Drawing.Point(305, 214);
+            this.exportToExcelButton.Location = new System.Drawing.Point(851, 593);
             this.exportToExcelButton.Name = "exportToExcelButton";
-            this.exportToExcelButton.Size = new System.Drawing.Size(75, 37);
+            this.exportToExcelButton.Size = new System.Drawing.Size(89, 20);
             this.exportToExcelButton.TabIndex = 26;
             this.exportToExcelButton.Text = "Export to CSV";
             this.exportToExcelButton.UseVisualStyleBackColor = true;
@@ -153,6 +162,11 @@
             this.dataObjectsListView.UseCompatibleStateImageBehavior = false;
             this.dataObjectsListView.View = System.Windows.Forms.View.Details;
             this.dataObjectsListView.SelectedIndexChanged += new System.EventHandler(this.dataObjectsListView_SelectedIndexChanged);
+            // 
+            // columnHeaderDataObject
+            // 
+            this.columnHeaderDataObject.Text = "Data objects";
+            this.columnHeaderDataObject.Width = 162;
             // 
             // label3
             // 
@@ -182,6 +196,7 @@
             this.tableDeleteButton.TabIndex = 31;
             this.tableDeleteButton.Text = "DELETE";
             this.tableDeleteButton.UseVisualStyleBackColor = true;
+            this.tableDeleteButton.Click += new System.EventHandler(this.tableDeleteButton_Click);
             // 
             // masterButton
             // 
@@ -225,24 +240,14 @@
             // 
             // masterQueryLoadButton
             // 
-            this.masterQueryLoadButton.Enabled = false;
             this.masterQueryLoadButton.Location = new System.Drawing.Point(623, 13);
             this.masterQueryLoadButton.Name = "masterQueryLoadButton";
             this.masterQueryLoadButton.Size = new System.Drawing.Size(75, 28);
             this.masterQueryLoadButton.TabIndex = 35;
             this.masterQueryLoadButton.Text = "Load query";
             this.masterQueryLoadButton.UseVisualStyleBackColor = true;
+            this.masterQueryLoadButton.Visible = false;
             this.masterQueryLoadButton.Click += new System.EventHandler(this.masterQueryLoadButton_Click);
-            // 
-            // masterQueryExportToExcelButton
-            // 
-            this.masterQueryExportToExcelButton.Enabled = false;
-            this.masterQueryExportToExcelButton.Location = new System.Drawing.Point(704, 14);
-            this.masterQueryExportToExcelButton.Name = "masterQueryExportToExcelButton";
-            this.masterQueryExportToExcelButton.Size = new System.Drawing.Size(116, 26);
-            this.masterQueryExportToExcelButton.TabIndex = 36;
-            this.masterQueryExportToExcelButton.Text = "Export to CSV";
-            this.masterQueryExportToExcelButton.UseVisualStyleBackColor = true;
             // 
             // masterQueryTextBox
             // 
@@ -252,11 +257,7 @@
             this.masterQueryTextBox.Name = "masterQueryTextBox";
             this.masterQueryTextBox.Size = new System.Drawing.Size(650, 82);
             this.masterQueryTextBox.TabIndex = 37;
-            // 
-            // columnHeaderDataObject
-            // 
-            this.columnHeaderDataObject.Text = "Data objects";
-            this.columnHeaderDataObject.Width = 162;
+            this.masterQueryTextBox.Visible = false;
             // 
             // tableEditButton
             // 
@@ -266,6 +267,74 @@
             this.tableEditButton.TabIndex = 38;
             this.tableEditButton.Text = "EDIT";
             this.tableEditButton.UseVisualStyleBackColor = true;
+            this.tableEditButton.Click += new System.EventHandler(this.tableEditButton_Click);
+            // 
+            // button1
+            // 
+            this.button1.Enabled = false;
+            this.button1.Location = new System.Drawing.Point(107, 593);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(89, 20);
+            this.button1.TabIndex = 39;
+            this.button1.Text = "Save Settings";
+            this.button1.UseVisualStyleBackColor = true;
+            // 
+            // button2
+            // 
+            this.button2.Enabled = false;
+            this.button2.Location = new System.Drawing.Point(12, 593);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(89, 20);
+            this.button2.TabIndex = 40;
+            this.button2.Text = "Load Settings";
+            this.button2.UseVisualStyleBackColor = true;
+            // 
+            // saveDataObjectButton
+            // 
+            this.saveDataObjectButton.Location = new System.Drawing.Point(305, 214);
+            this.saveDataObjectButton.Name = "saveDataObjectButton";
+            this.saveDataObjectButton.Size = new System.Drawing.Size(75, 37);
+            this.saveDataObjectButton.TabIndex = 41;
+            this.saveDataObjectButton.Text = "Save data object";
+            this.saveDataObjectButton.UseVisualStyleBackColor = true;
+            this.saveDataObjectButton.Visible = false;
+            this.saveDataObjectButton.Click += new System.EventHandler(this.saveDataObjectButton_Click);
+            // 
+            // sourceTypesGroupBox
+            // 
+            this.sourceTypesGroupBox.Controls.Add(this.sourceSharePointRadioButton);
+            this.sourceTypesGroupBox.Controls.Add(this.sourceExcelRadioButton);
+            this.sourceTypesGroupBox.Location = new System.Drawing.Point(704, 5);
+            this.sourceTypesGroupBox.Name = "sourceTypesGroupBox";
+            this.sourceTypesGroupBox.Size = new System.Drawing.Size(236, 39);
+            this.sourceTypesGroupBox.TabIndex = 42;
+            this.sourceTypesGroupBox.TabStop = false;
+            this.sourceTypesGroupBox.Text = "Source type";
+            this.sourceTypesGroupBox.Visible = false;
+            // 
+            // sourceSharePointRadioButton
+            // 
+            this.sourceSharePointRadioButton.AutoSize = true;
+            this.sourceSharePointRadioButton.Location = new System.Drawing.Point(64, 18);
+            this.sourceSharePointRadioButton.Name = "sourceSharePointRadioButton";
+            this.sourceSharePointRadioButton.Size = new System.Drawing.Size(77, 17);
+            this.sourceSharePointRadioButton.TabIndex = 1;
+            this.sourceSharePointRadioButton.Text = "SharePoint";
+            this.sourceSharePointRadioButton.UseVisualStyleBackColor = true;
+            this.sourceSharePointRadioButton.CheckedChanged += new System.EventHandler(this.radioButton2_CheckedChanged);
+            // 
+            // sourceExcelRadioButton
+            // 
+            this.sourceExcelRadioButton.AutoSize = true;
+            this.sourceExcelRadioButton.Checked = true;
+            this.sourceExcelRadioButton.Location = new System.Drawing.Point(7, 18);
+            this.sourceExcelRadioButton.Name = "sourceExcelRadioButton";
+            this.sourceExcelRadioButton.Size = new System.Drawing.Size(51, 17);
+            this.sourceExcelRadioButton.TabIndex = 0;
+            this.sourceExcelRadioButton.TabStop = true;
+            this.sourceExcelRadioButton.Text = "Excel";
+            this.sourceExcelRadioButton.UseVisualStyleBackColor = true;
+            this.sourceExcelRadioButton.CheckedChanged += new System.EventHandler(this.sourceExcelRadioButton_CheckedChanged);
             // 
             // mainForm
             // 
@@ -273,8 +342,11 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(952, 618);
             this.ControlBox = false;
+            this.Controls.Add(this.sourceTypesGroupBox);
+            this.Controls.Add(this.saveDataObjectButton);
+            this.Controls.Add(this.button2);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.tableEditButton);
-            this.Controls.Add(this.masterQueryExportToExcelButton);
             this.Controls.Add(this.masterQueryLoadButton);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
@@ -294,10 +366,13 @@
             this.Controls.Add(this.excelFilePathTextbox);
             this.Controls.Add(this.queryLoadButton);
             this.Controls.Add(this.masterQueryTextBox);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "mainForm";
             this.Text = "Report generator";
             this.Load += new System.EventHandler(this.mainForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.previewGridView)).EndInit();
+            this.sourceTypesGroupBox.ResumeLayout(false);
+            this.sourceTypesGroupBox.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -323,10 +398,15 @@
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Button masterQueryLoadButton;
-        private System.Windows.Forms.Button masterQueryExportToExcelButton;
         private System.Windows.Forms.TextBox masterQueryTextBox;
         private System.Windows.Forms.ColumnHeader columnHeaderDataObject;
         private System.Windows.Forms.Button tableEditButton;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button saveDataObjectButton;
+        private System.Windows.Forms.GroupBox sourceTypesGroupBox;
+        private System.Windows.Forms.RadioButton sourceSharePointRadioButton;
+        private System.Windows.Forms.RadioButton sourceExcelRadioButton;
     }
 }
 

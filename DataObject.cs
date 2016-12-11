@@ -6,11 +6,13 @@ using System.Threading.Tasks;
 
 namespace Report_generator
 {
-    class DataObject
+    public class DataObject
     {
         public string Name;
         public string sqlQuery;
         public System.Data.DataTable DataTable;
+        //public string sourceAddress;
+        //public string sourceExcelSheet;
 
         /* Constructor that takes one argument.*/
         public DataObject(string newName) { Name = newName; }

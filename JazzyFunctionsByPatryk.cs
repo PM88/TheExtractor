@@ -8,9 +8,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using Microsoft.Office.Interop.Excel;
+
 namespace Report_generator
 {
-    public static class JazzyFunctionsByPatryk //ver071216_1
+    public static class JazzyFunctionsByPatryk //ver111216_1
     {
         public static string queryString;
         public static string connectionStringExcel;
@@ -90,16 +92,28 @@ namespace Report_generator
             using (var conn = new OleDbConnection(connectionString)) //sbConnection.ToString()))
             {
                 conn.Open();
-                DataTable dtSheet = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, null);
+                System.Data.DataTable dtSheet = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, null);
                 foreach (DataRow drSheet in dtSheet.Rows)
                 {
                     if (drSheet["TABLE_NAME"].ToString().Contains("$"))//checks whether row contains '_xlnm#_FilterDatabase' or sheet name(i.e. sheet name always ends with $ sign)
-                    {
-                        listSheet.Add(drSheet["TABLE_NAME"].ToString().Replace("$", ""));
-                    }
+                    { listSheet.Add(drSheet["TABLE_NAME"].ToString().Replace("$", "")); }
                 }
                 conn.Close();
             }
+            return listSheet;
+        }
+        public static List<string> ListSheetInExcelInterop(string excelFilePath)
+        {
+            var listSheet = new List<string>();
+            var excelApp = new Microsoft.Office.Interop.Excel.Application();
+            Microsoft.Office.Interop.Excel.Workbook excelWorkbook = null;
+            try { excelWorkbook = excelApp.Workbooks.Open(excelFilePath, 0, true); }
+            catch { listSheet = null; ReleaseObject(excelApp); ReleaseObject(excelWorkbook); return listSheet; }
+
+            var excelWorksheets = excelWorkbook.Worksheets;
+            foreach (Worksheet worksheet in excelWorksheets) { listSheet.Add(worksheet.Name); }
+
+            ReleaseObject(excelApp); ReleaseObject(excelWorkbook); ReleaseObject(excelWorksheets); //ReleaseObject(worksheet);
             return listSheet;
         }
         public static string BrowseSavePath(string extension = "") //BrowseSavePath and BrowseFilePath will be refactored into one
@@ -123,6 +137,22 @@ namespace Report_generator
 
             if (ofd.ShowDialog() == DialogResult.OK) { return ofd.FileName; } else { return ""; }
         }
+        public static void ReleaseObject(object obj)
+        {
+            try
+            {
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(obj);
+                obj = null;
+            }
+            catch (Exception ex)
+            {
+                obj = null;
+                MessageBox.Show("Exception Occured while releasing object " + ex.ToString());
+            }
+            finally
+            { GC.Collect(); }
+        }
+
         //public string GetHTMLStringFromDataTable(System.Data.DataTable dt, bool enableOuterMarkupTags = true)
         //{
         //    //Convert date columns to string w/o time if 
