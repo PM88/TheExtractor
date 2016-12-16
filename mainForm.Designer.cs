@@ -55,6 +55,7 @@
             this.sourceTypesGroupBox = new System.Windows.Forms.GroupBox();
             this.sourceSharePointRadioButton = new System.Windows.Forms.RadioButton();
             this.sourceExcelRadioButton = new System.Windows.Forms.RadioButton();
+            this.exportToExcelButton2 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.previewGridView)).BeginInit();
             this.sourceTypesGroupBox.SuspendLayout();
             this.SuspendLayout();
@@ -232,11 +233,13 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.ForeColor = System.Drawing.Color.Red;
             this.groupBox2.Location = new System.Drawing.Point(12, 125);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(928, 14);
             this.groupBox2.TabIndex = 34;
             this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "PLEASE MAKE SURE THAT EXCEL IS CLOSED OR YOU WILL LOSE YOUR WORK PROGRESS!!";
             // 
             // masterQueryLoadButton
             // 
@@ -317,9 +320,9 @@
             this.sourceSharePointRadioButton.AutoSize = true;
             this.sourceSharePointRadioButton.Location = new System.Drawing.Point(64, 18);
             this.sourceSharePointRadioButton.Name = "sourceSharePointRadioButton";
-            this.sourceSharePointRadioButton.Size = new System.Drawing.Size(77, 17);
+            this.sourceSharePointRadioButton.Size = new System.Drawing.Size(106, 17);
             this.sourceSharePointRadioButton.TabIndex = 1;
-            this.sourceSharePointRadioButton.Text = "SharePoint";
+            this.sourceSharePointRadioButton.Text = "SharePoint Excel";
             this.sourceSharePointRadioButton.UseVisualStyleBackColor = true;
             this.sourceSharePointRadioButton.CheckedChanged += new System.EventHandler(this.radioButton2_CheckedChanged);
             // 
@@ -336,12 +339,24 @@
             this.sourceExcelRadioButton.UseVisualStyleBackColor = true;
             this.sourceExcelRadioButton.CheckedChanged += new System.EventHandler(this.sourceExcelRadioButton_CheckedChanged);
             // 
+            // exportToExcelButton2
+            // 
+            this.exportToExcelButton2.Enabled = false;
+            this.exportToExcelButton2.Location = new System.Drawing.Point(756, 593);
+            this.exportToExcelButton2.Name = "exportToExcelButton2";
+            this.exportToExcelButton2.Size = new System.Drawing.Size(89, 20);
+            this.exportToExcelButton2.TabIndex = 43;
+            this.exportToExcelButton2.Text = "Export to XLS";
+            this.exportToExcelButton2.UseVisualStyleBackColor = true;
+            this.exportToExcelButton2.Click += new System.EventHandler(this.exportToExcelButton2_Click);
+            // 
             // mainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(952, 618);
             this.ControlBox = false;
+            this.Controls.Add(this.exportToExcelButton2);
             this.Controls.Add(this.sourceTypesGroupBox);
             this.Controls.Add(this.saveDataObjectButton);
             this.Controls.Add(this.button2);
@@ -407,6 +422,7 @@
         private System.Windows.Forms.GroupBox sourceTypesGroupBox;
         private System.Windows.Forms.RadioButton sourceSharePointRadioButton;
         private System.Windows.Forms.RadioButton sourceExcelRadioButton;
+        private System.Windows.Forms.Button exportToExcelButton2;
     }
 }
 

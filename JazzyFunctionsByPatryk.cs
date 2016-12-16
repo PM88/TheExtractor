@@ -37,6 +37,32 @@ namespace Report_generator
 
             File.WriteAllText(targetPath, sb.ToString());
         }
+        public static void DataTableToXLSFile(System.Data.DataTable dt, string targetPath, string sheetName = "")
+        {
+            var excelApp = new Microsoft.Office.Interop.Excel.Application();
+            Microsoft.Office.Interop.Excel.Workbook excelWorkBook = null;
+            if (! File.Exists(targetPath))
+            {
+                excelWorkBook = excelApp.Workbooks.Add();
+                excelWorkBook.SaveAs(targetPath);
+            }
+            else { excelWorkBook = excelApp.Workbooks.Open(targetPath); }
+            
+            Microsoft.Office.Interop.Excel.Worksheet excelWorkSheet = (Worksheet)excelWorkBook.Sheets.Add();
+            
+            if(sheetName != "") {excelWorkSheet.Name = sheetName;}
+
+            for (int i = 1; i < dt.Columns.Count + 1; i++)
+            { excelWorkSheet.Cells[1, i] = dt.Columns[i - 1].ColumnName; }
+
+            for (int j = 0; j < dt.Rows.Count; j++)
+            {
+                for (int k = 0; k < dt.Columns.Count; k++)
+                { excelWorkSheet.Cells[j + 2, k + 1] = dt.Rows[j].ItemArray[k].ToString(); }
+            }
+            excelWorkBook.Save();
+            KillTask("EXCEL");
+        }
         public static System.Data.DataTable GetDataTable(string connectionString, string queryString)
         {
             //Establish connection
@@ -107,14 +133,16 @@ namespace Report_generator
             var listSheet = new List<string>();
             var excelApp = new Microsoft.Office.Interop.Excel.Application();
             Microsoft.Office.Interop.Excel.Workbook excelWorkbook = null;
-            try { excelWorkbook = excelApp.Workbooks.Open(excelFilePath, 0, true); }
-            catch { listSheet = null; ReleaseObject(excelApp); ReleaseObject(excelWorkbook); return listSheet; }
-
-            var excelWorksheets = excelWorkbook.Worksheets;
-            foreach (Worksheet worksheet in excelWorksheets) { listSheet.Add(worksheet.Name); }
-
-            ReleaseObject(excelApp); ReleaseObject(excelWorkbook); ReleaseObject(excelWorksheets); //ReleaseObject(worksheet);
+            try 
+            { 
+                excelWorkbook = excelApp.Workbooks.Open(excelFilePath, 0, true);
+                var excelWorksheets = excelWorkbook.Worksheets;
+                foreach (Worksheet worksheet in excelWorksheets) { listSheet.Add(worksheet.Name); }
+            }
+            catch { listSheet = null; }
+            KillTask("EXCEL");
             return listSheet;
+            //ReleaseObject(excelApp); ReleaseObject(excelWorkbook); ReleaseObject(excelWorksheets); //ReleaseObject(worksheet);
         }
         public static string BrowseSavePath(string extension = "") //BrowseSavePath and BrowseFilePath will be refactored into one
         {
@@ -137,20 +165,42 @@ namespace Report_generator
 
             if (ofd.ShowDialog() == DialogResult.OK) { return ofd.FileName; } else { return ""; }
         }
-        public static void ReleaseObject(object obj)
+        //public static void ReleaseObject(object obj)
+        //{
+        //    try
+        //    {
+        //        System.Runtime.InteropServices.Marshal.ReleaseComObject(obj);
+        //        obj = null;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        obj = null;
+        //        MessageBox.Show("Exception Occured while releasing object " + ex.ToString());
+        //    }
+        //    finally
+        //    { GC.Collect(); }
+        //}
+        public static void KillTask(string ProcessesName)
         {
-            try
+            /*Kill the all process obj from the Task Manager(Process)*/
+            System.Diagnostics.Process[] objProcesses = System.Diagnostics.Process.GetProcessesByName(ProcessesName);
+
+            if (objProcesses.Length > 0)
             {
-                System.Runtime.InteropServices.Marshal.ReleaseComObject(obj);
-                obj = null;
+                var objHashtable = new System.Collections.Hashtable();
+
+                /* check to kill the right process*/
+                foreach (System.Diagnostics.Process process in objProcesses)
+                { if (objHashtable.ContainsKey(process.Id) == false) { process.Kill(); } }
+                objProcesses = null;
             }
-            catch (Exception ex)
-            {
-                obj = null;
-                MessageBox.Show("Exception Occured while releasing object " + ex.ToString());
-            }
-            finally
-            { GC.Collect(); }
+
+            //Quick Answer:
+            //foreach (var process in Process.GetProcessesByName("whatever"))
+            //{ process.Kill(); }
+
+            /*In case of you want to quit what you have created the Excel object from your application //just use below condition in above,
+                if (processInExcel.MainWindowTitle.ToString() == "") ;*/
         }
 
         //public string GetHTMLStringFromDataTable(System.Data.DataTable dt, bool enableOuterMarkupTags = true)

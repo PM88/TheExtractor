@@ -51,15 +51,20 @@ namespace Report_generator
             /*Verify user input*/
             /*Load query to data grid or return connection error*/
 
-            /*test below*/
+            LoadQueryFromTextBoxToGridView(queryTextBox, this.excelFilePathTextbox.Text);
+            //this.exportToExcelButton.Enabled = true;
+        }
+
+        private void LoadQueryFromTextBoxToGridView(Control currentQueryTextBox, string excelFilePath)
+        {
             System.Data.DataTable excelSheetDataTable;
             /*Prepare SQL Query*/
-            string queryString = queryTextBox.Text;
-            if (queryString == "") { queryString = "SELECT * FROM [" + this.excelFileSheetsComboBox.Text.Replace("'","") + "$]"; /*+ "$B1:G3]"*/ }
+            string queryString = currentQueryTextBox.Text;
+            if (queryString == "") { queryString = "SELECT * FROM [" + this.excelFileSheetsComboBox.Text.Replace("'", "") + "$]"; /*+ "$B1:G3]"*/ }
             this.queryTextBox.Text = queryString;
 
             /*Preparing database connection*/
-            string excelFileConnectionString = JazzyFunctionsByPatryk.GetConnectionStringExcel(this.excelFilePathTextbox.Text);
+            string excelFileConnectionString = JazzyFunctionsByPatryk.GetConnectionStringExcel(excelFilePath);
 
             //Create data table
             excelSheetDataTable = JazzyFunctionsByPatryk.GetDataTable(excelFileConnectionString, queryString);
@@ -67,15 +72,14 @@ namespace Report_generator
             /*Extract data into data grid on form */
             //if (excelSheetDataTable != null)
             //{ if (excelSheetDataTable.Rows.Count > 0) { this.excelQueryGridView.DataSource = excelSheetDataTable; queryTextBox.Text = queryString; } }
-            this.previewGridView.DataSource = excelSheetDataTable; queryTextBox.Text = queryString;
-            this.exportToExcelButton.Enabled = true;
+            this.previewGridView.DataSource = excelSheetDataTable; currentQueryTextBox.Text = queryString;
         }
         private void exportToExcelButton_Click(object sender, EventArgs e)
         {
             /*Ask for the target location*/
             /*Save in XLS*/
 
-            //test
+            if (previewGridView.DataSource == null) { return; }
             string savePath = JazzyFunctionsByPatryk.BrowseSavePath("csv");
             //BindingSource bs = (BindingSource)this.excelQueryGridView.DataSource; // Se convierte el DataSource 
             //DataTable tCxC = (DataTable)bs.DataSource;
@@ -89,9 +93,12 @@ namespace Report_generator
             //if (con != null) con.Close();
 
             //JazzyFunctionsByPatryk.ReleaseObject(tempExcelWorkbook);
-            Environment.Exit(1);
+            try { System.IO.File.Delete(tempExcelWorkbook.FullName); }//if (tempExcelWorkbook.FullName.Length > 0) { 
+            catch { }
+            finally { Environment.Exit(1); }
+            
         }
-        private void createTemporaryDatabase()
+        private void CreateTemporaryDatabase()
         {
             string extractorFolderPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
             string temporaryExcelFilePath = extractorFolderPath + @"\ExtractorTempFile.xls";
@@ -149,24 +156,61 @@ namespace Report_generator
         }
         private void masterQueryLoadButton_Click(object sender, EventArgs e)
         {
-            createTemporaryDatabase();
-
+            CreateTemporaryDatabase();
+            foreach (var key in dataObjectCollecion.Keys)
+            {
+                DataObject currentDataObject = dataObjectCollecion[key];
+                JazzyFunctionsByPatryk.DataTableToXLSFile(currentDataObject.DataTable as System.Data.DataTable, tempExcelWorkbook.FullName, currentDataObject.Name);
+            }
             tempExcelWorkbook.Close(true);
 
-            
 
-            JazzyFunctionsByPatryk.ReleaseObject(tempExcelWorkbook);
-            JazzyFunctionsByPatryk.ReleaseObject(excelApp);
+            //JazzyFunctionsByPatryk.ReleaseObject(tempExcelWorkbook);
+            //JazzyFunctionsByPatryk.ReleaseObject(excelApp);
+            JazzyFunctionsByPatryk.KillTask("EXCEL");
+            LoadQueryFromTextBoxToGridView(masterQueryTextBox, tempExcelWorkbook.FullName);
+            System.IO.File.Delete(tempExcelWorkbook.FullName);
 
             //MessageBox.Show(tempExcelWorkbook.FullName);
             //cat.Create("Provider=Microsoft.Jet.OLEDB.4.0;" + "Data Source=" + fileName + "; Jet OLEDB:Engine Type=5");
             //tempCatalog.Tables.Append(newTable);
         }
+
+
+//         try
+//  {
+//    m_COMObject.SomeMethod();
+//  }
+
+//  Exception(exception exception)
+//  {
+//    DisposeCOMObject();
+//    InitializeCOMOBject();
+//    COMObject.Somethod();
+//  }
+
+
+// public void DisposeCOMObject()
+//{
+//  m_COMObject = null;
+//  var process = Process.GetProcessesByNames("COM .exe").FirstDefault();
+
+//   if(process != null)
+//    {
+//         process.kill();
+//       }
+//}
+
+// public void InitializeCOMObject()
+//{
+//  m_COMObject = null;
+//  m_COMObject = new COMObject();
+//}
         private void dataObjectsListView_SelectedIndexChanged(object sender, EventArgs e) { PreviewMode(); }
         private void PreviewMode()//int listIndex
         {
             queryLoadButton.Enabled = false;
-            exportToExcelButton.Enabled = false;
+            //exportToExcelButton.Enabled = false;
             queryTextBox.Enabled = false;
             saveDataObjectButton.Visible = false;
 
@@ -195,7 +239,7 @@ namespace Report_generator
         {
             if (dataObjectsListView.SelectedItems.Count == 0) { return; }
             queryLoadButton.Enabled = true;
-            exportToExcelButton.Enabled = true;
+            //exportToExcelButton.Enabled = true;
             queryTextBox.Enabled = true;
             saveDataObjectButton.Visible = true;
             DemSwitchez(1,"Choose the source file and sheet");
@@ -214,12 +258,19 @@ namespace Report_generator
         private void radioButton2_CheckedChanged(object sender, EventArgs e)//sourceSharePointRadioButton; annoying
         {
             excelFileBrowsePathButton.Visible = false;
-            excelFileSheetsComboBox.Visible = false;
+            //excelFileSheetsComboBox.Visible = false;
         }
         private void sourceExcelRadioButton_CheckedChanged(object sender, EventArgs e)
         {
             excelFileBrowsePathButton.Visible = true;
             excelFileSheetsComboBox.Visible = true;
+        }
+
+        private void exportToExcelButton2_Click(object sender, EventArgs e)
+        {
+            if (previewGridView.DataSource == null) { return; }
+            string savePath = JazzyFunctionsByPatryk.BrowseSavePath("csv");
+            JazzyFunctionsByPatryk.DataTableToXLSFile(this.previewGridView.DataSource as System.Data.DataTable, savePath);
         }
     }
 }
