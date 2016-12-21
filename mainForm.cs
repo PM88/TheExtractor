@@ -9,21 +9,35 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using Microsoft.VisualBasic;
-using Microsoft.Office.Interop.Excel;
+using ADOX;
 
-/*Developer Comment*/
-//Rough note (ignore it)
+/*Developer Comments*/
+//Rough notes (ignore it)
 
 namespace Report_generator
 {
     public partial class mainForm : Form
     {
-        //public ADOX.Catalog tempCatalog;
-        //public JazzyFunctionsByPatryk jf;
+        public ADOX.Catalog storageDbCatalog;
         public Dictionary<string, DataObject> dataObjectCollecion;
-        Microsoft.Office.Interop.Excel.Application excelApp;
-        Microsoft.Office.Interop.Excel.Workbook tempExcelWorkbook;
-        public mainForm() { InitializeComponent(); dataObjectCollecion = new Dictionary<string, DataObject>(); }
+        public string currentFolder;
+        public string accessStorageDB;
+
+        public mainForm() 
+        { 
+            InitializeComponent(); dataObjectCollecion = new Dictionary<string, DataObject>();
+            currentFolder = System.IO.Path.GetDirectoryName(Application.ExecutablePath) + @"\";
+            CheckNecessaryFiles();
+        }
+        private void CheckNecessaryFiles()
+        {
+            string adoDbLibrary = currentFolder + "adodb.dll";
+            string vbLibrary = currentFolder + "Microsoft.VisualBasic.dll";
+            string[] criticalFiles = { adoDbLibrary, vbLibrary };
+
+            foreach (string filePath in criticalFiles)
+            { if (!(System.IO.File.Exists(filePath))) { MessageBox.Show("Critical file was not found. The application will exit." + Environment.NewLine + accessStorageDB); Environment.Exit(1); } }
+        }
         private void excelFilePathButton_Click(object sender, EventArgs e)
         {
             /*Allow the user to browse for eligible Excel file*/
@@ -36,7 +50,7 @@ namespace Report_generator
             //if (connectionString == "") { MessageBox.Show("Could not load the sheets from the chosen Excel file."); return; }
 
             //var excelFileSheetsList = JazzyFunctionsByPatryk.ListSheetInExcel(connectionString);
-            var excelFileSheetsList = JazzyFunctionsByPatryk.ListSheetInExcelInterop(workbookPath);
+            var excelFileSheetsList = JazzyFunctionsByPatryk.ListSheetInExcel(workbookPath);
             if (excelFileSheetsList == null) { MessageBox.Show("Could not load the sheets. Is the Excel file correct?"); return; }
             this.excelFileSheetsComboBox.DataSource = excelFileSheetsList;
 
@@ -51,10 +65,10 @@ namespace Report_generator
             /*Verify user input*/
             /*Load query to data grid or return connection error*/
 
-            LoadQueryFromTextBoxToGridView(queryTextBox, this.excelFilePathTextbox.Text);
+            if (this.excelFilePathTextbox.Text == "") { MessageBox.Show("You need to choose the file path first!"); }
+            else { LoadQueryFromTextBoxToGridView(queryTextBox, this.excelFilePathTextbox.Text); }
             //this.exportToExcelButton.Enabled = true;
         }
-
         private void LoadQueryFromTextBoxToGridView(Control currentQueryTextBox, string excelFilePath)
         {
             System.Data.DataTable excelSheetDataTable;
@@ -64,49 +78,37 @@ namespace Report_generator
             this.queryTextBox.Text = queryString;
 
             /*Preparing database connection*/
-            string excelFileConnectionString = JazzyFunctionsByPatryk.GetConnectionStringExcel(excelFilePath);
+            string excelFileConnectionString = JazzyFunctionsByPatryk.GetConnectionString(excelFilePath);
 
             //Create data table
             excelSheetDataTable = JazzyFunctionsByPatryk.GetDataTable(excelFileConnectionString, queryString);
+
+            //foreach (DataColumn col in excelSheetDataTable.Columns) { MessageBox.Show(col.ColumnName + " Type is: " + col.DataType); }
 
             /*Extract data into data grid on form */
             //if (excelSheetDataTable != null)
             //{ if (excelSheetDataTable.Rows.Count > 0) { this.excelQueryGridView.DataSource = excelSheetDataTable; queryTextBox.Text = queryString; } }
             this.previewGridView.DataSource = excelSheetDataTable; currentQueryTextBox.Text = queryString;
         }
-        private void exportToExcelButton_Click(object sender, EventArgs e)
-        {
-            /*Ask for the target location*/
-            /*Save in XLS*/
-
-            if (previewGridView.DataSource == null) { return; }
-            string savePath = JazzyFunctionsByPatryk.BrowseSavePath("csv");
-            //BindingSource bs = (BindingSource)this.excelQueryGridView.DataSource; // Se convierte el DataSource 
-            //DataTable tCxC = (DataTable)bs.DataSource;
-            JazzyFunctionsByPatryk.DataTableToCSVFile(this.previewGridView.DataSource as System.Data.DataTable, savePath);
-        }
         private void mainForm_Load(object sender, EventArgs e) { /*DemSwitchez(0);*/ }
         private void quitButton_Click(object sender, EventArgs e)
         {
-            /*Delete the temp database and exit*/
-            //var con = tempCatalog.ActiveConnection as ADODB.Connection;
-            //if (con != null) con.Close();
+            /*Terminate the storage database connection and exit*/
 
-            //JazzyFunctionsByPatryk.ReleaseObject(tempExcelWorkbook);
-            try { System.IO.File.Delete(tempExcelWorkbook.FullName); }//if (tempExcelWorkbook.FullName.Length > 0) { 
-            catch { }
-            finally { Environment.Exit(1); }
-            
+            TerminateDB(true);
+            Environment.Exit(1);
         }
-        private void CreateTemporaryDatabase()
-        {
-            string extractorFolderPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
-            string temporaryExcelFilePath = extractorFolderPath + @"\ExtractorTempFile.xls";
 
-            excelApp = new Microsoft.Office.Interop.Excel.Application();
-            //Microsoft.Office.Interop.Excel.Workbook tempExcelWorkbook = null;
-            tempExcelWorkbook = excelApp.Workbooks.Add();
-            tempExcelWorkbook.SaveAs(temporaryExcelFilePath);
+        private void TerminateDB(bool question = false)
+        {
+            if (System.IO.File.Exists(accessStorageDB))
+            {
+                var con = storageDbCatalog.ActiveConnection as ADODB.Connection;
+                if (con != null) con.Close();
+                DialogResult dialogResult = DialogResult.Yes;
+                if (question) { dialogResult = MessageBox.Show("Would you like to delete the temporary database?" + Environment.NewLine + accessStorageDB, "", MessageBoxButtons.YesNo); }
+                if (dialogResult == DialogResult.Yes ) { System.IO.File.Delete(accessStorageDB); }
+            }
         }
         private void masterButton_Click(object sender, EventArgs e) { DemSwitchez(2,"Master report"); }
         private void DemSwitchez(int switchCode, string flexiLabelText = "")
@@ -160,54 +162,96 @@ namespace Report_generator
             foreach (var key in dataObjectCollecion.Keys)
             {
                 DataObject currentDataObject = dataObjectCollecion[key];
-                JazzyFunctionsByPatryk.DataTableToXLSFile(currentDataObject.DataTable as System.Data.DataTable, tempExcelWorkbook.FullName, currentDataObject.Name);
+                var newTable = new ADOX.Table();
+                newTable.Name = currentDataObject.Name;
+                DataTable currentDatatable = currentDataObject.DataTable;
+                foreach (DataColumn col in currentDatatable.Columns)
+                {
+                    switch(col.DataType.ToString())
+                    {
+                        case "System.String": case "System.Char": case "System.Guid":
+                            newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adVarWChar);//ADOX.DataTypeEnum.adVarWChar
+                            break;
+                        case "System.DateTime": case "System.TimeSpan":
+                            newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adDate);
+                            break;
+                        case "System.Boolean":
+                            newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adBoolean);
+                            break;
+                        default:/*"System.Double", "System.Decimal","System.Byte","System.Int16","System.Int32","System.Int64","System.SByte","System.Single","System.UInt16","System.UInt32","System.UInt64" */
+                            newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adDouble);
+                            break;
+                    }
+                }
+                storageDbCatalog.Tables.Append(newTable);
+
+                var con = storageDbCatalog.ActiveConnection as ADODB.Connection;
+                object obj = new object();
+
+                try
+                { 
+                    foreach (DataRow row in currentDatatable.Rows)
+                    { con.Execute(GetSqlInsertNQuery(currentDataObject.DataTable, currentDataObject.Name, currentDatatable.Rows.IndexOf(row)), out obj); }
+                }
+                catch (Exception ex) { MessageBox.Show(ex.Message, ex.Source); }
+                finally { TerminateDB(); }
             }
-            tempExcelWorkbook.Close(true);
-
-
-            //JazzyFunctionsByPatryk.ReleaseObject(tempExcelWorkbook);
-            //JazzyFunctionsByPatryk.ReleaseObject(excelApp);
-            JazzyFunctionsByPatryk.KillTask("EXCEL");
-            LoadQueryFromTextBoxToGridView(masterQueryTextBox, tempExcelWorkbook.FullName);
-            System.IO.File.Delete(tempExcelWorkbook.FullName);
-
-            //MessageBox.Show(tempExcelWorkbook.FullName);
-            //cat.Create("Provider=Microsoft.Jet.OLEDB.4.0;" + "Data Source=" + fileName + "; Jet OLEDB:Engine Type=5");
-            //tempCatalog.Tables.Append(newTable);
+                       
         }
+        private string GetSqlInsertNQuery(DataTable dt, string tableName, int rowNum)
+        {
+            string columnsNames = string.Empty;
+            foreach (DataColumn col in dt.Columns)
+            { columnsNames = columnsNames + col.ColumnName + ", "; }
+            columnsNames = columnsNames.Remove(columnsNames.Length - 2);/*For removing comma*/
 
+             string columnsValues = string.Empty;
+            foreach(var item in dt.Rows[rowNum].ItemArray)  
+            { 
+                switch(item.GetType().ToString())
+                {
+                    case "System.String":
+                    case "System.Char":
+                    case "System.Guid":
+                        columnsValues = columnsValues + @""" + item + @""" + ", ";
+                        break;
+                    case "System.DateTime":
+                    case "System.TimeSpan":
+                        columnsValues = columnsValues + Convert.ToDouble(item) + ", ";
+                        break;
+                    default:
+                        columnsValues = columnsValues + item + ", ";
+                        break;
+                }
+                 
+            }
+            columnsValues = columnsValues.Remove(columnsValues.Length - 2);
 
-//         try
-//  {
-//    m_COMObject.SomeMethod();
-//  }
-
-//  Exception(exception exception)
-//  {
-//    DisposeCOMObject();
-//    InitializeCOMOBject();
-//    COMObject.Somethod();
-//  }
-
-
-// public void DisposeCOMObject()
-//{
-//  m_COMObject = null;
-//  var process = Process.GetProcessesByNames("COM .exe").FirstDefault();
-
-//   if(process != null)
-//    {
-//         process.kill();
-//       }
-//}
-
-// public void InitializeCOMObject()
-//{
-//  m_COMObject = null;
-//  m_COMObject = new COMObject();
-//}
+            string fullReturnString = "INSERT INTO " + tableName + "(" + columnsNames + ") VALUES(" + columnsValues + ");";
+            return fullReturnString;
+            
+                            //conPeople.Execute("INSERT INTO Persons(LastName, Gender, FirstName) " +
+                            //  "VALUES('Germain', 'Male', 'Ndongo');", out obj, 0);
+        }
+        private void CreateTemporaryDatabase()
+        {
+            try
+            {           
+                storageDbCatalog = new Catalog();
+                SetStringAccessStorageDB();
+                storageDbCatalog.Create(JazzyFunctionsByPatryk.GetConnectionString(accessStorageDB));
+                //storageDbCatalog = null;
+            }
+            catch (Exception e) { MessageBox.Show(e.Message.ToString()); }
+        }
+        private void SetStringAccessStorageDB()
+        {
+            accessStorageDB = currentFolder + "ExtractorStorage.accdb";
+            int i = 1;
+            do { accessStorageDB = currentFolder + "(" + i + ")" + "ExtractorStorage.accdb"; } while (System.IO.File.Exists(accessStorageDB));
+        }
         private void dataObjectsListView_SelectedIndexChanged(object sender, EventArgs e) { PreviewMode(); }
-        private void PreviewMode()//int listIndex
+        private void PreviewMode()
         {
             queryLoadButton.Enabled = false;
             //exportToExcelButton.Enabled = false;
@@ -223,8 +267,7 @@ namespace Report_generator
 
             //excelFileBrowsePathButton.Visible = false;
             excelFilePathTextbox.Text = "";
-            excelFileSheetsComboBox.DataSource = null;
-            excelFileSheetsComboBox.Items.Clear();
+            excelFileSheetsComboBox.DataSource = null; excelFileSheetsComboBox.Items.Clear();
         }
         private void tableDeleteButton_Click(object sender, EventArgs e)
         {
@@ -233,6 +276,9 @@ namespace Report_generator
             if (MessageBox.Show("Are you sure that you want to remove the " + currentDataObjectName + " data object?", "Confirmation required", MessageBoxButtons.YesNo) == DialogResult.No) { return; }
             dataObjectCollecion.Remove(currentDataObjectName);
             dataObjectsListView.SelectedItems[0].Remove();
+
+            excelFilePathTextbox.Text = "";
+            excelFileSheetsComboBox.DataSource = null; excelFileSheetsComboBox.Items.Clear();
         }
         private void tableEditButton_Click(object sender, EventArgs e) { EditMode(); }
         private void EditMode()
@@ -265,12 +311,11 @@ namespace Report_generator
             excelFileBrowsePathButton.Visible = true;
             excelFileSheetsComboBox.Visible = true;
         }
-
-        private void exportToExcelButton2_Click(object sender, EventArgs e)
+        private void exportToCsvButton_Click(object sender, EventArgs e)
         {
             if (previewGridView.DataSource == null) { return; }
             string savePath = JazzyFunctionsByPatryk.BrowseSavePath("csv");
-            JazzyFunctionsByPatryk.DataTableToXLSFile(this.previewGridView.DataSource as System.Data.DataTable, savePath);
+            JazzyFunctionsByPatryk.DataTableToCSVFile(this.previewGridView.DataSource as System.Data.DataTable, savePath);
         }
     }
 }

@@ -8,11 +8,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using Microsoft.Office.Interop.Excel;
+//using Microsoft.Office.Interop.Excel;
 
 namespace Report_generator
 {
-    public static class JazzyFunctionsByPatryk //ver111216_1
+    public static class JazzyFunctionsByPatryk //ver201216_1
     {
         public static string queryString;
         public static string connectionStringExcel;
@@ -37,32 +37,32 @@ namespace Report_generator
 
             File.WriteAllText(targetPath, sb.ToString());
         }
-        public static void DataTableToXLSFile(System.Data.DataTable dt, string targetPath, string sheetName = "")
-        {
-            var excelApp = new Microsoft.Office.Interop.Excel.Application();
-            Microsoft.Office.Interop.Excel.Workbook excelWorkBook = null;
-            if (! File.Exists(targetPath))
-            {
-                excelWorkBook = excelApp.Workbooks.Add();
-                excelWorkBook.SaveAs(targetPath);
-            }
-            else { excelWorkBook = excelApp.Workbooks.Open(targetPath); }
+        //public static void DataTableToXLSFile(System.Data.DataTable dt, string targetPath, string sheetName = "")
+        //{
+        //    var excelApp = new Microsoft.Office.Interop.Excel.Application();
+        //    Microsoft.Office.Interop.Excel.Workbook excelWorkBook = null;
+        //    if (! File.Exists(targetPath))
+        //    {
+        //        excelWorkBook = excelApp.Workbooks.Add();
+        //        excelWorkBook.SaveAs(targetPath);
+        //    }
+        //    else { excelWorkBook = excelApp.Workbooks.Open(targetPath); }
             
-            Microsoft.Office.Interop.Excel.Worksheet excelWorkSheet = (Worksheet)excelWorkBook.Sheets.Add();
+        //    Microsoft.Office.Interop.Excel.Worksheet excelWorkSheet = (Worksheet)excelWorkBook.Sheets.Add();
             
-            if(sheetName != "") {excelWorkSheet.Name = sheetName;}
+        //    if(sheetName != "") {excelWorkSheet.Name = sheetName;}
 
-            for (int i = 1; i < dt.Columns.Count + 1; i++)
-            { excelWorkSheet.Cells[1, i] = dt.Columns[i - 1].ColumnName; }
+        //    for (int i = 1; i < dt.Columns.Count + 1; i++)
+        //    { excelWorkSheet.Cells[1, i] = dt.Columns[i - 1].ColumnName; }
 
-            for (int j = 0; j < dt.Rows.Count; j++)
-            {
-                for (int k = 0; k < dt.Columns.Count; k++)
-                { excelWorkSheet.Cells[j + 2, k + 1] = dt.Rows[j].ItemArray[k].ToString(); }
-            }
-            excelWorkBook.Save();
-            KillTask("EXCEL");
-        }
+        //    for (int j = 0; j < dt.Rows.Count; j++)
+        //    {
+        //        for (int k = 0; k < dt.Columns.Count; k++)
+        //        { excelWorkSheet.Cells[j + 2, k + 1] = dt.Rows[j].ItemArray[k].ToString(); }
+        //    }
+        //    excelWorkBook.Save();
+        //    KillTask("EXCEL");
+        //}
         public static System.Data.DataTable GetDataTable(string connectionString, string queryString)
         {
             //Establish connection
@@ -77,12 +77,12 @@ namespace Report_generator
 
             return dataTable;
         }
-        public static string GetConnectionStringExcel(string excelFilePath)
+        public static string GetConnectionString(string filePath)
         {
             var sbConnection = new OleDbConnectionStringBuilder();
             string strExtendedProperties = string.Empty;
 
-            string excelFileExtension = System.IO.Path.GetExtension(excelFilePath);
+            string excelFileExtension = System.IO.Path.GetExtension(filePath);
             //string connectionPropertiesExcelVersion = string.Empty;
 
             switch (excelFileExtension)
@@ -99,22 +99,24 @@ namespace Report_generator
                     strExtendedProperties = "Excel 12.0 Macro;HDR=Yes;IMEX=1";
                     //connectionPropertiesExcelVersion = "\"Excel 12.0 Macro";
                     break;
-                default:
+                default: /*Includes .accdb (Access)*/
                     // MessageBox.Show("Invalid data type. The only acceptable extensions are: .xls .xlsx .xlsm");
-                    return "";
+                    //return "";
+                    break;
             }
 
-            sbConnection.DataSource = excelFilePath;
+            sbConnection.DataSource = filePath;
             sbConnection.Provider = "Microsoft.ACE.OLEDB.12.0";
-            sbConnection.Add("Extended Properties", strExtendedProperties);
+            if (!(strExtendedProperties == string.Empty)) { sbConnection.Add("Extended Properties", strExtendedProperties); }
             return sbConnection.ToString(); //excelFileConnectionString;
             //string connectionProperties = connectionPropertiesExcelVersion + "; HDR=YES\";"; //HDR means that the first row is header
             //string excelFileConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0; Data Source=" + excelFilePath
             //    + "; Extended Properties=" + connectionProperties;
         }
-        public static List<string> ListSheetInExcel(string connectionString)
+        public static List<string> ListSheetInExcel(string excelFilePath)
         {
             var listSheet = new List<string>();
+            string connectionString = GetConnectionString(excelFilePath);
             using (var conn = new OleDbConnection(connectionString)) //sbConnection.ToString()))
             {
                 conn.Open();
@@ -128,22 +130,22 @@ namespace Report_generator
             }
             return listSheet;
         }
-        public static List<string> ListSheetInExcelInterop(string excelFilePath)
-        {
-            var listSheet = new List<string>();
-            var excelApp = new Microsoft.Office.Interop.Excel.Application();
-            Microsoft.Office.Interop.Excel.Workbook excelWorkbook = null;
-            try 
-            { 
-                excelWorkbook = excelApp.Workbooks.Open(excelFilePath, 0, true);
-                var excelWorksheets = excelWorkbook.Worksheets;
-                foreach (Worksheet worksheet in excelWorksheets) { listSheet.Add(worksheet.Name); }
-            }
-            catch { listSheet = null; }
-            KillTask("EXCEL");
-            return listSheet;
-            //ReleaseObject(excelApp); ReleaseObject(excelWorkbook); ReleaseObject(excelWorksheets); //ReleaseObject(worksheet);
-        }
+        //public static List<string> ListSheetInExcelInterop(string excelFilePath)
+        //{
+        //    var listSheet = new List<string>();
+        //    var excelApp = new Microsoft.Office.Interop.Excel.Application();
+        //    Microsoft.Office.Interop.Excel.Workbook excelWorkbook = null;
+        //    try 
+        //    { 
+        //        excelWorkbook = excelApp.Workbooks.Open(excelFilePath, 0, true);
+        //        var excelWorksheets = excelWorkbook.Worksheets;
+        //        foreach (Worksheet worksheet in excelWorksheets) { listSheet.Add(worksheet.Name); }
+        //    }
+        //    catch { listSheet = null; }
+        //    KillTask("EXCEL");
+        //    return listSheet;
+        //    //ReleaseObject(excelApp); ReleaseObject(excelWorkbook); ReleaseObject(excelWorksheets); //ReleaseObject(worksheet);
+        //}
         public static string BrowseSavePath(string extension = "") //BrowseSavePath and BrowseFilePath will be refactored into one
         {
             string filter;

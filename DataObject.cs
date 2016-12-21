@@ -20,7 +20,7 @@ namespace Report_generator
         public void SetQueryAndDataTable(string sql, string excelFilePath)
         {
             sqlQuery = sql;
-            DataTable = JazzyFunctionsByPatryk.GetDataTable(JazzyFunctionsByPatryk.GetConnectionStringExcel(excelFilePath), sql);
+            DataTable = JazzyFunctionsByPatryk.GetDataTable(JazzyFunctionsByPatryk.GetConnectionString(excelFilePath), sql);
         }
     }
 }

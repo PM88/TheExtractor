@@ -36,7 +36,6 @@
             this.excelFileBrowsePathButton = new System.Windows.Forms.Button();
             this.excelFilePathTextbox = new System.Windows.Forms.TextBox();
             this.queryLoadButton = new System.Windows.Forms.Button();
-            this.exportToExcelButton = new System.Windows.Forms.Button();
             this.dataObjectsListView = new System.Windows.Forms.ListView();
             this.columnHeaderDataObject = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.label3 = new System.Windows.Forms.Label();
@@ -55,7 +54,7 @@
             this.sourceTypesGroupBox = new System.Windows.Forms.GroupBox();
             this.sourceSharePointRadioButton = new System.Windows.Forms.RadioButton();
             this.sourceExcelRadioButton = new System.Windows.Forms.RadioButton();
-            this.exportToExcelButton2 = new System.Windows.Forms.Button();
+            this.exportToCsvButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.previewGridView)).BeginInit();
             this.sourceTypesGroupBox.SuspendLayout();
             this.SuspendLayout();
@@ -78,7 +77,7 @@
             this.flexiLabel.Name = "flexiLabel";
             this.flexiLabel.Size = new System.Drawing.Size(318, 25);
             this.flexiLabel.TabIndex = 24;
-            this.flexiLabel.Text = "Welcome to the Extractor v2.1.1";
+            this.flexiLabel.Text = "Welcome to the Extractor v2.0.0";
             // 
             // queryTextBox
             // 
@@ -137,17 +136,6 @@
             this.queryLoadButton.Text = "Load query";
             this.queryLoadButton.UseVisualStyleBackColor = true;
             this.queryLoadButton.Click += new System.EventHandler(this.queryLoadButton_Click);
-            // 
-            // exportToExcelButton
-            // 
-            this.exportToExcelButton.Enabled = false;
-            this.exportToExcelButton.Location = new System.Drawing.Point(851, 593);
-            this.exportToExcelButton.Name = "exportToExcelButton";
-            this.exportToExcelButton.Size = new System.Drawing.Size(89, 20);
-            this.exportToExcelButton.TabIndex = 26;
-            this.exportToExcelButton.Text = "Export to CSV";
-            this.exportToExcelButton.UseVisualStyleBackColor = true;
-            this.exportToExcelButton.Click += new System.EventHandler(this.exportToExcelButton_Click);
             // 
             // dataObjectsListView
             // 
@@ -239,7 +227,6 @@
             this.groupBox2.Size = new System.Drawing.Size(928, 14);
             this.groupBox2.TabIndex = 34;
             this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "PLEASE MAKE SURE THAT EXCEL IS CLOSED OR YOU WILL LOSE YOUR WORK PROGRESS!!";
             // 
             // masterQueryLoadButton
             // 
@@ -307,6 +294,7 @@
             // 
             this.sourceTypesGroupBox.Controls.Add(this.sourceSharePointRadioButton);
             this.sourceTypesGroupBox.Controls.Add(this.sourceExcelRadioButton);
+            this.sourceTypesGroupBox.Enabled = false;
             this.sourceTypesGroupBox.Location = new System.Drawing.Point(704, 5);
             this.sourceTypesGroupBox.Name = "sourceTypesGroupBox";
             this.sourceTypesGroupBox.Size = new System.Drawing.Size(236, 39);
@@ -339,16 +327,16 @@
             this.sourceExcelRadioButton.UseVisualStyleBackColor = true;
             this.sourceExcelRadioButton.CheckedChanged += new System.EventHandler(this.sourceExcelRadioButton_CheckedChanged);
             // 
-            // exportToExcelButton2
+            // exportToCsvButton
             // 
-            this.exportToExcelButton2.Enabled = false;
-            this.exportToExcelButton2.Location = new System.Drawing.Point(756, 593);
-            this.exportToExcelButton2.Name = "exportToExcelButton2";
-            this.exportToExcelButton2.Size = new System.Drawing.Size(89, 20);
-            this.exportToExcelButton2.TabIndex = 43;
-            this.exportToExcelButton2.Text = "Export to XLS";
-            this.exportToExcelButton2.UseVisualStyleBackColor = true;
-            this.exportToExcelButton2.Click += new System.EventHandler(this.exportToExcelButton2_Click);
+            this.exportToCsvButton.Enabled = false;
+            this.exportToCsvButton.Location = new System.Drawing.Point(851, 593);
+            this.exportToCsvButton.Name = "exportToCsvButton";
+            this.exportToCsvButton.Size = new System.Drawing.Size(89, 20);
+            this.exportToCsvButton.TabIndex = 44;
+            this.exportToCsvButton.Text = "Export to CSV";
+            this.exportToCsvButton.UseVisualStyleBackColor = true;
+            this.exportToCsvButton.Click += new System.EventHandler(this.exportToCsvButton_Click);
             // 
             // mainForm
             // 
@@ -356,7 +344,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(952, 618);
             this.ControlBox = false;
-            this.Controls.Add(this.exportToExcelButton2);
+            this.Controls.Add(this.exportToCsvButton);
             this.Controls.Add(this.sourceTypesGroupBox);
             this.Controls.Add(this.saveDataObjectButton);
             this.Controls.Add(this.button2);
@@ -371,7 +359,6 @@
             this.Controls.Add(this.tableAddButton);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.dataObjectsListView);
-            this.Controls.Add(this.exportToExcelButton);
             this.Controls.Add(this.excelFileSheetsComboBox);
             this.Controls.Add(this.flexiLabel);
             this.Controls.Add(this.queryTextBox);
@@ -403,7 +390,6 @@
         private System.Windows.Forms.Button excelFileBrowsePathButton;
         private System.Windows.Forms.TextBox excelFilePathTextbox;
         private System.Windows.Forms.Button queryLoadButton;
-        private System.Windows.Forms.Button exportToExcelButton;
         private System.Windows.Forms.ListView dataObjectsListView;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button tableAddButton;
@@ -422,7 +408,7 @@
         private System.Windows.Forms.GroupBox sourceTypesGroupBox;
         private System.Windows.Forms.RadioButton sourceSharePointRadioButton;
         private System.Windows.Forms.RadioButton sourceExcelRadioButton;
-        private System.Windows.Forms.Button exportToExcelButton2;
+        private System.Windows.Forms.Button exportToCsvButton;
     }
 }
 
