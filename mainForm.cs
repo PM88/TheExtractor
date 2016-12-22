@@ -22,6 +22,8 @@ namespace Report_generator
         public Dictionary<string, DataObject> dataObjectCollecion;
         public string currentFolder;
         public string accessStorageDB;
+        //public AdodbCommandDraft cmdDraft;
+        public ADODB.Command cmdDraft;
 
         public mainForm() 
         { 
@@ -165,33 +167,74 @@ namespace Report_generator
                 var newTable = new ADOX.Table();
                 newTable.Name = currentDataObject.Name;
                 DataTable currentDatatable = currentDataObject.DataTable;
-                foreach (DataColumn col in currentDatatable.Columns)
-                {
-                    switch(col.DataType.ToString())
-                    {
-                        case "System.String": case "System.Char": case "System.Guid":
-                            newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adVarWChar);//ADOX.DataTypeEnum.adVarWChar
-                            break;
-                        case "System.DateTime": case "System.TimeSpan":
-                            newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adDate);
-                            break;
-                        case "System.Boolean":
-                            newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adBoolean);
-                            break;
-                        default:/*"System.Double", "System.Decimal","System.Byte","System.Int16","System.Int32","System.Int64","System.SByte","System.Single","System.UInt16","System.UInt32","System.UInt64" */
-                            newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adDouble);
-                            break;
-                    }
-                }
-                storageDbCatalog.Tables.Append(newTable);
-
-                var con = storageDbCatalog.ActiveConnection as ADODB.Connection;
-                object obj = new object();
-
+                //ADODB.Parameter newParameter;
                 try
                 { 
-                    foreach (DataRow row in currentDatatable.Rows)
-                    { con.Execute(GetSqlInsertNQuery(currentDataObject.DataTable, currentDataObject.Name, currentDatatable.Rows.IndexOf(row)), out obj); }
+                    foreach (DataColumn col in currentDatatable.Columns)
+                    {
+                        //var con = storageDbCatalog.ActiveConnection as ADODB.Connection;
+                       cmdDraft =  new ADODB.Command();//new AdodbCommandDraft(storageDbCatalog.ActiveConnection);
+                       cmdDraft.ActiveConnection=storageDbCatalog.ActiveConnection;
+                   
+
+                        switch(col.DataType.ToString())
+                        {
+                            case "System.String": case "System.Char": case "System.Guid":
+                                newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adVarWChar);//ADOX.DataTypeEnum.adVarWChar
+                                cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adVarWChar, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
+                                //newParameter = cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adVarWChar, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
+                                //cmdDraft.Parameters.Append(newParameter); 
+                                break;
+                            case "System.DateTime": case "System.TimeSpan":
+                                newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adDate);
+                                cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adDate, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
+                                //newParameter = cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adDate, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
+                                //cmdDraft.Parameters.Append(newParameter); 
+                                break;
+                            case "System.Boolean":
+                                newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adBoolean);
+                                //newParameter = cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adBoolean, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
+                                //cmdDraft.Parameters.Append(newParameter); 
+                                break;
+                            default:/*"System.Double", "System.Decimal","System.Byte","System.Int16","System.Int32","System.Int64","System.SByte","System.Single","System.UInt16","System.UInt32","System.UInt64" */
+                                newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adDouble);
+                                cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adDouble, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
+                                //newParameter = cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adDouble, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
+                                //cmdDraft.Parameters.Append(newParameter); 
+                                break;
+                        }
+                    }
+                    storageDbCatalog.Tables.Append(newTable);
+
+                
+                    object obj = new object();
+                    string sqlString = string.Empty;
+                    ADODB.Parameter currentParameter;
+                    int currentRowNumber;
+
+                        foreach (DataRow row in currentDatatable.Rows)
+                        { 
+                            currentRowNumber = currentDatatable.Rows.IndexOf(row);
+                            //con.Execute(GetSqlInsertNQuery(currentDataObject.DataTable, currentDataObject.Name, currentDatatable.Rows.IndexOf(row)), out obj); 
+                            sqlString = GetSqlInsertNQuery(currentDataObject.DataTable, currentDataObject.Name, currentRowNumber);
+                            //var cmd = new System.Data.OleDb.OleDbCommand(sqlString, con);
+                            //using(con)//System.Data.OleDb.OleDbCommand())
+                            //{
+                            ADODB.Command cmd= cmdDraft; 
+                        
+                            cmd.CommandText = sqlString;
+                            // ADODB.CommandTypeEnum.adCmdText for oridinary SQL statements;  
+                            // ADODB.CommandTypeEnum.adCmdStoredProc for stored procedures. 
+                            cmd.CommandType = ADODB.CommandTypeEnum.adCmdText; 
+                            foreach (DataColumn col in currentDatatable.Columns)
+                            {
+                                cmd.Parameters[col.ColumnName].Value = row[col.ColumnName];
+                                //currentParameter = cmd.Parameters[col.ColumnName];
+                                //currentParameter.Value = row[col.ColumnName];//currentDatatable.Rows[currentRowNumber]
+                                //ADODB.Parameter param = cmd.CreateParameter()
+                            }
+                            //}
+                        }
                 }
                 catch (Exception ex) { MessageBox.Show(ex.Message, ex.Source); }
                 finally { TerminateDB(); }
@@ -201,35 +244,33 @@ namespace Report_generator
         private string GetSqlInsertNQuery(DataTable dt, string tableName, int rowNum)
         {
             string columnsNames = string.Empty;
+            string columnsValues = string.Empty;
             foreach (DataColumn col in dt.Columns)
-            { columnsNames = columnsNames + col.ColumnName + ", "; }
+            { columnsNames = columnsNames + col.ColumnName + ", "; columnsValues = columnsValues + @"@" + col.ColumnName + ", "; }
             columnsNames = columnsNames.Remove(columnsNames.Length - 2);/*For removing comma*/
-
-             string columnsValues = string.Empty;
-            foreach(var item in dt.Rows[rowNum].ItemArray)  
-            { 
-                switch(item.GetType().ToString())
-                {
-                    case "System.String":
-                    case "System.Char":
-                    case "System.Guid":
-                        columnsValues = columnsValues + @""" + item + @""" + ", ";
-                        break;
-                    case "System.DateTime":
-                    case "System.TimeSpan":
-                        columnsValues = columnsValues + Convert.ToDouble(item) + ", ";
-                        break;
-                    default:
-                        columnsValues = columnsValues + item + ", ";
-                        break;
-                }
-                 
-            }
             columnsValues = columnsValues.Remove(columnsValues.Length - 2);
+
+            //foreach(var item in dt.Rows[rowNum].ItemArray)  
+            //{ 
+            //    switch(item.GetType().ToString())
+            //    {
+            //        case "System.String":
+            //        case "System.Char":
+            //        case "System.Guid":
+            //            columnsValues = columnsValues + @""" + item + @""" + ", ";
+            //            break;
+            //        case "System.DateTime":
+            //        case "System.TimeSpan":
+            //            columnsValues = columnsValues + Convert.ToDouble(item) + ", ";
+            //            break;
+            //        default:
+            //            columnsValues = columnsValues + item + ", ";
+            //            break;
+            //    }
+            //}
 
             string fullReturnString = "INSERT INTO " + tableName + "(" + columnsNames + ") VALUES(" + columnsValues + ");";
             return fullReturnString;
-            
                             //conPeople.Execute("INSERT INTO Persons(LastName, Gender, FirstName) " +
                             //  "VALUES('Germain', 'Male', 'Ndongo');", out obj, 0);
         }

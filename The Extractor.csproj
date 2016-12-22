@@ -51,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AdodbCommandDraft.cs" />
     <Compile Include="DataObject.cs" />
     <Compile Include="JazzyFunctionsByPatryk.cs" />
     <Compile Include="mainForm.cs">
