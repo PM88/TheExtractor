@@ -23,9 +23,8 @@ namespace Report_generator
         public Dictionary<string, DataObject> dataObjectCollecion;
         public string currentFolder;
         public string accessStorageDB;
-        //public AdodbCommandDraft cmdDraft;
-        //public ADODB.Command cmdDraft;
         public OleDbCommand cmdDraft;
+        public string masterConnString;
 
         public mainForm() 
         { 
@@ -99,11 +98,13 @@ namespace Report_generator
         {
             if (System.IO.File.Exists(accessStorageDB))
             {
-                //var con = storageDbCatalog.ActiveConnection as ADODB.Connection;
-                //if (con != null) con.Close();
+                var con = storageDbCatalog.ActiveConnection as ADODB.Connection;
+                if (con != null) con.Close();
+                //System.Runtime.InteropServices.Marshal.FinalReleaseComObject(storageDbCatalog.ActiveConnection);
+                System.Runtime.InteropServices.Marshal.FinalReleaseComObject(storageDbCatalog);
                 DialogResult dialogResult = DialogResult.Yes;
                 if (question) { dialogResult = MessageBox.Show("Would you like to delete the temporary database?" + Environment.NewLine + accessStorageDB, "", MessageBoxButtons.YesNo); }
-                if (dialogResult == DialogResult.Yes ) { System.IO.File.Delete(accessStorageDB); }
+                if (dialogResult == DialogResult.Yes) { try { System.IO.File.Delete(accessStorageDB); } catch (Exception e) { MessageBox.Show(e.Message); } }
             }
         }
         private void masterButton_Click(object sender, EventArgs e) { DemSwitchez(2,"Master report"); }
@@ -154,8 +155,8 @@ namespace Report_generator
         }
         private OleDbParameter GetOleDbParam(string name, int code)
         {
-            OleDbParameter newParameter = new OleDbParameter(); 
-            newParameter.ParameterName = @"@" + name;
+            OleDbParameter newParameter = new OleDbParameter();
+            newParameter.ParameterName = @"@" + GetCleanParameterName(name);
             switch(code)
             {
                 case 0: newParameter.OleDbType = OleDbType.VarWChar;
@@ -170,39 +171,22 @@ namespace Report_generator
             newParameter.Value = null;
             return newParameter;
         }
-        private void CreateTemporaryDatabase()
+        private string GetCleanParameterName(string name) { return name.Replace(" ", ""); }
+        private bool CreateTemporaryDatabase()
         {
             try
             {          
-                //using(var con = new OleDbConnection(JazzyFunctionsByPatryk.GetConnectionString(accessStorageDB))
-                //{
-
-                
-                //    con.Open();
-
                 storageDbCatalog = new Catalog();
                 SetStringAccessStorageDB();
-                storageDbCatalog.Create(JazzyFunctionsByPatryk.GetConnectionString(accessStorageDB));
-                System.Runtime.InteropServices.Marshal.FinalReleaseComObject(storageDbCatalog.ActiveConnection);
-                System.Runtime.InteropServices.Marshal.FinalReleaseComObject(storageDbCatalog);
-                    //}
-                //storageDbCatalog.ActiveConnection.Close();
-                //storageDbCatalog = null;
-
+                masterConnString = JazzyFunctionsByPatryk.GetConnectionString(accessStorageDB);
+                storageDbCatalog.Create(masterConnString);
+                return true;
             }
-            catch (Exception e) { MessageBox.Show(e.Message.ToString()); }
+            catch (Exception e) { MessageBox.Show(e.Message.ToString()); return false; }
         }
         private void masterQueryLoadButton_Click(object sender, EventArgs e)
         {
-            CreateTemporaryDatabase();
-            var con = new OleDbConnection(JazzyFunctionsByPatryk.GetConnectionString(accessStorageDB));
-            con.Open();
-            //if (con != null) con.Close();
-            //var con = new OleDbConnection(JazzyFunctionsByPatryk.GetConnectionString(accessStorageDB));
-            //con.Open();
-            //MessageBox.Show(con.ConnectionString);
-            //MessageBox.Show(con.DataSource);
-            //if (con != null) { MessageBox.Show(con.State.ToString()); }
+            if(!(CreateTemporaryDatabase())) {return;}
 
             foreach (var key in dataObjectCollecion.Keys)
             {
@@ -210,121 +194,87 @@ namespace Report_generator
                 var newTable = new ADOX.Table();
                 newTable.Name = currentDataObject.Name;
                 DataTable currentDatatable = currentDataObject.DataTable;
-                //ADODB.Parameter newParameter;
-                //OleDbParameter newParameter;
+
                 try
                 {
-                    cmdDraft = new OleDbCommand();//new AdodbCommandDraft(storageDbCatalog.ActiveConnection);
-                    cmdDraft.Connection = con;
-                    cmdDraft.CommandType = CommandType.StoredProcedure;
                     foreach (DataColumn col in currentDatatable.Columns)
                     {
-                       //cmdDraft.ActiveConnection=storageDbCatalog.ActiveConnection;
+                        switch (col.DataType.ToString())
+                        {
+                            case "System.String": case "System.Char": case "System.Guid": newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adVarWChar); break;
+                            case "System.DateTime": case "System.TimeSpan": newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adDate); break;
+                            case "System.Boolean": newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adBoolean); break;
+                            default: newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adDouble); break;
+                        }
+                    }
+                    storageDbCatalog.Tables.Append(newTable);
+
+                    var con = new OleDbConnection(masterConnString);
+                    con.Open();
+
+                    cmdDraft = new OleDbCommand();//new AdodbCommandDraft(storageDbCatalog.ActiveConnection);
+                    cmdDraft.Connection = con;
+                    cmdDraft.CommandType = CommandType.Text;
+                    cmdDraft.CommandText = GetSqlInsertNQuery(currentDataObject.DataTable, currentDataObject.Name);
+                    foreach (DataColumn col in currentDatatable.Columns)
+                    {
                         switch(col.DataType.ToString())
                         {
                             case "System.String": case "System.Char": case "System.Guid":
                                 newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adVarWChar);//ADOX.DataTypeEnum.adVarWChar
                                 cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName,0));
-                                //cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adVarWChar, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
-                                //newParameter = cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adVarWChar, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
-                                //cmdDraft.Parameters.Append(newParameter); 
                                 break;
                             case "System.DateTime": case "System.TimeSpan":
                                 newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adDate);
                                 cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName, 1));
-                                //cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adDate, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
-                                //newParameter = cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adDate, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
-                                //cmdDraft.Parameters.Append(newParameter); 
                                 break;
                             case "System.Boolean":
                                 newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adBoolean);
                                 cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName, 2));
-                                //newParameter = cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adBoolean, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
-                                //cmdDraft.Parameters.Append(newParameter); 
                                 break;
                             default:/*"System.Double", "System.Decimal","System.Byte","System.Int16","System.Int32","System.Int64","System.SByte","System.Single","System.UInt16","System.UInt32","System.UInt64" */
                                 newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adDouble);
                                 cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName, 3));
-                                //cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adDouble, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
-                                //newParameter = cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adDouble, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
-                                //cmdDraft.Parameters.Append(newParameter); 
                                 break;
                         }
                     }
-                    storageDbCatalog.Tables.Append(newTable);
-                    //MessageBox.Show(cmdDraft.Parameters.Count.ToString() + ": " + cmdDraft.Parameters[@"@Code"].Value);
-                
-                    //object obj = new object();
-                    string sqlString = string.Empty;
-                    //ADODB.Parameter currentParameter;
-                    int currentRowNumber;
-                    OleDbCommand cmd;
+                    
+                    
 
-                        foreach (DataRow row in currentDatatable.Rows)
-                        { 
-                            currentRowNumber = currentDatatable.Rows.IndexOf(row);
-                            //con.Execute(GetSqlInsertNQuery(currentDataObject.DataTable, currentDataObject.Name, currentDatatable.Rows.IndexOf(row)), out obj); 
-                            sqlString = GetSqlInsertNQuery(currentDataObject.DataTable, currentDataObject.Name, currentRowNumber);
-                            //var cmd = new System.Data.OleDb.OleDbCommand(sqlString, con);
-                            //using(con)//System.Data.OleDb.OleDbCommand())
-                            //{
-                            cmd = cmdDraft;
-                            //cmd.Connection.Open();
-                            //MessageBox.Show(cmd.Connection.State.ToString());
-                            //cmd.Connection = storageDbCatalog.ActiveConnection as OleDbConnection;
-                            //cmd.Connection.Open();// = cmdDraft.Connection;
-                            // ADODB.CommandTypeEnum.adCmdText for oridinary SQL statements;  
-                            // ADODB.CommandTypeEnum.adCmdStoredProc for stored procedures. 
-                            //cmd.CommandType = ADODB.CommandTypeEnum.adCmdText; 
-                            foreach (DataColumn col in currentDatatable.Columns)
-                            {
-                                cmd.Parameters[@"@" + col.ColumnName].Value = row[col.ColumnName];
-                                //currentParameter = cmd.Parameters[col.ColumnName];
-                                //currentParameter.Value = row[col.ColumnName];//currentDatatable.Rows[currentRowNumber]
-                                //ADODB.Parameter param = cmd.CreateParameter()
-                            }
-                            cmd.ExecuteNonQuery();
-                            //}
-                        }
+                    OleDbCommand cmd;
+                    foreach (DataRow row in currentDatatable.Rows)
+                    { 
+                        //currentRowNumber = currentDatatable.Rows.IndexOf(row);
+                        cmd = cmdDraft;
+                        foreach (DataColumn col in currentDatatable.Columns)
+                        { cmd.Parameters[@"@" + GetCleanParameterName(col.ColumnName)].Value = row[col.ColumnName]; }
+                        cmd.ExecuteNonQuery(); //test
+                    }
+
+                    //test
+                    //System.Data.DataTable excelSheetDataTable;
+                    //string queryString = "SELECT * FROM " + currentDataObject.Name;
+                    //string excelFileConnectionString = JazzyFunctionsByPatryk.GetConnectionString(accessStorageDB);
+                    //excelSheetDataTable = JazzyFunctionsByPatryk.GetDataTable(excelFileConnectionString, queryString);
+                    //this.previewGridView.DataSource = excelSheetDataTable;
                         
                 }
                 catch (Exception ex) { MessageBox.Show(ex.Message, ex.Source); }
-                finally { TerminateDB(); }
+                finally { con.Close(); TerminateDB(); }
             }
                        
         }
-        private string GetSqlInsertNQuery(DataTable dt, string tableName, int rowNum)
+        private string GetSqlInsertNQuery(DataTable dt, string tableName)
         {
             string columnsNames = string.Empty;
             string columnsValues = string.Empty;
             foreach (DataColumn col in dt.Columns)
-            { columnsNames = columnsNames + "[" + col.ColumnName + "]" + ", "; columnsValues = columnsValues + @"@" + col.ColumnName + ", "; }
+            { columnsNames = columnsNames + "[" + col.ColumnName + "]" + ", "; columnsValues = columnsValues + @"@" + GetCleanParameterName(col.ColumnName) + ", "; }
             columnsNames = columnsNames.Remove(columnsNames.Length - 2);/*For removing comma*/
             columnsValues = columnsValues.Remove(columnsValues.Length - 2);
 
-            //foreach(var item in dt.Rows[rowNum].ItemArray)  
-            //{ 
-            //    switch(item.GetType().ToString())
-            //    {
-            //        case "System.String":
-            //        case "System.Char":
-            //        case "System.Guid":
-            //            columnsValues = columnsValues + @""" + item + @""" + ", ";
-            //            break;
-            //        case "System.DateTime":
-            //        case "System.TimeSpan":
-            //            columnsValues = columnsValues + Convert.ToDouble(item) + ", ";
-            //            break;
-            //        default:
-            //            columnsValues = columnsValues + item + ", ";
-            //            break;
-            //    }
-            //}
-
-            string fullReturnString = "INSERT INTO " + tableName + "(" + columnsNames + ") VALUES(" + columnsValues + ");";
+            string fullReturnString = "INSERT INTO [" + tableName + "] (" + columnsNames + ") VALUES(" + columnsValues + ");";
             return fullReturnString;
-                            //conPeople.Execute("INSERT INTO Persons(LastName, Gender, FirstName) " +
-                            //  "VALUES('Germain', 'Male', 'Ndongo');", out obj, 0);
         }
         private void SetStringAccessStorageDB()
         {
@@ -371,10 +321,6 @@ namespace Report_generator
             queryTextBox.Enabled = true;
             saveDataObjectButton.Visible = true;
             DemSwitchez(1,"Choose the source file and sheet");
-
-            //DataObject currentDataObject = dataObjectCollecion[dataObjectsListView.SelectedItems[0].SubItems[0].Text];
-            //previewGridView.DataSource = currentDataObject.DataTable;
-            //queryTextBox.Text = currentDataObject.sqlQuery;
         }
         private void saveDataObjectButton_Click(object sender, EventArgs e)
         {
@@ -383,11 +329,7 @@ namespace Report_generator
             currentDataObject.sqlQuery = queryTextBox.Text;
             MessageBox.Show("Saved successfully.");
         }
-        private void radioButton2_CheckedChanged(object sender, EventArgs e)//sourceSharePointRadioButton; annoying
-        {
-            excelFileBrowsePathButton.Visible = false;
-            //excelFileSheetsComboBox.Visible = false;
-        }
+        private void radioButton2_CheckedChanged(object sender, EventArgs e) { excelFileBrowsePathButton.Visible = false; }
         private void sourceExcelRadioButton_CheckedChanged(object sender, EventArgs e)
         {
             excelFileBrowsePathButton.Visible = true;

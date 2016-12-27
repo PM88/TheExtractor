@@ -12,7 +12,7 @@ using System.Windows.Forms;
 
 namespace Report_generator
 {
-    public static class JazzyFunctionsByPatryk //ver201216_1
+    public static class JazzyFunctionsByPatryk //ver271216_1
     {
         public static string queryString;
         public static string connectionStringExcel;
@@ -81,32 +81,24 @@ namespace Report_generator
         {
             var sbConnection = new OleDbConnectionStringBuilder();
             string strExtendedProperties = string.Empty;
-
-            string excelFileExtension = System.IO.Path.GetExtension(filePath);
+            sbConnection.Provider = "Microsoft.ACE.OLEDB.12.0";
+            //string strDataSource = string.Empty;
+            string sourceFileExtension = System.IO.Path.GetExtension(filePath);
+            //int sourceType;
             //string connectionPropertiesExcelVersion = string.Empty;
 
-            switch (excelFileExtension)
+            switch (sourceFileExtension)
             {
-                case ".xls":
-                    strExtendedProperties = "Excel 8.0;HDR=Yes;IMEX=1";
-                    //connectionPropertiesExcelVersion = "\"Excel 8.0";
-                    break;
-                case ".xlsx":
-                    strExtendedProperties = "Excel 12.0 Xml;HDR=Yes;IMEX=1";
-                    //connectionPropertiesExcelVersion = "\"Excel 12.0 Xml";
-                    break;
-                case ".xlsm":
-                    strExtendedProperties = "Excel 12.0 Macro;HDR=Yes;IMEX=1";
-                    //connectionPropertiesExcelVersion = "\"Excel 12.0 Macro";
-                    break;
-                default: /*Includes .accdb (Access)*/
-                    // MessageBox.Show("Invalid data type. The only acceptable extensions are: .xls .xlsx .xlsm");
-                    //return "";
-                    break;
+                case ".xls": strExtendedProperties = "Excel 8.0; HDR = Yes; IMEX = 1;";  break; 
+                case ".xlsx": strExtendedProperties = "Excel 12.0 Xml; HDR = Yes; IMEX = 1;";  break;
+                case ".xlsm": strExtendedProperties = "Excel 12.0 Macro; HDR = Yes; IMEX = 1;";  break;
+                //case ".accdb": break;//strDataSource = "|DataDirectory|"; //strExtendedProperties = "Persist Security Info = False;" //sbConnection.PersistSecurityInfo = false;
+                default: break; //sbConnection.Provider = "Microsoft.Jet.Oledb.4.0";
             }
-
+            //strDataSource +=filePath;
             sbConnection.DataSource = filePath;
-            sbConnection.Provider = "Microsoft.ACE.OLEDB.12.0";
+            //if (sourceFileExtension == ".accdb") { sbConnection.DataSource = "|DataDirectory|" + filePath; } else { sbConnection.DataSource = filePath; }
+            
             if (!(strExtendedProperties == string.Empty)) { sbConnection.Add("Extended Properties", strExtendedProperties); }
             return sbConnection.ToString(); //excelFileConnectionString;
             //string connectionProperties = connectionPropertiesExcelVersion + "; HDR=YES\";"; //HDR means that the first row is header
