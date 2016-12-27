@@ -10,6 +10,7 @@ using System.Windows.Forms;
 
 using Microsoft.VisualBasic;
 using ADOX;
+using System.Data.OleDb;
 
 /*Developer Comments*/
 //Rough notes (ignore it)
@@ -23,7 +24,8 @@ namespace Report_generator
         public string currentFolder;
         public string accessStorageDB;
         //public AdodbCommandDraft cmdDraft;
-        public ADODB.Command cmdDraft;
+        //public ADODB.Command cmdDraft;
+        public OleDbCommand cmdDraft;
 
         public mainForm() 
         { 
@@ -62,17 +64,10 @@ namespace Report_generator
         {
             /*Fill the fields list*/
         }
-        private void queryLoadButton_Click(object sender, EventArgs e)
-        {
-            /*Verify user input*/
-            /*Load query to data grid or return connection error*/
-
-            if (this.excelFilePathTextbox.Text == "") { MessageBox.Show("You need to choose the file path first!"); }
-            else { LoadQueryFromTextBoxToGridView(queryTextBox, this.excelFilePathTextbox.Text); }
-            //this.exportToExcelButton.Enabled = true;
-        }
+        private void queryLoadButton_Click(object sender, EventArgs e) { LoadQueryFromTextBoxToGridView(queryTextBox, this.excelFilePathTextbox.Text); }
         private void LoadQueryFromTextBoxToGridView(Control currentQueryTextBox, string excelFilePath)
         {
+            if (excelFilePath == "") { MessageBox.Show("File path is missing!"); }
             System.Data.DataTable excelSheetDataTable;
             /*Prepare SQL Query*/
             string queryString = currentQueryTextBox.Text;
@@ -100,13 +95,12 @@ namespace Report_generator
             TerminateDB(true);
             Environment.Exit(1);
         }
-
         private void TerminateDB(bool question = false)
         {
             if (System.IO.File.Exists(accessStorageDB))
             {
-                var con = storageDbCatalog.ActiveConnection as ADODB.Connection;
-                if (con != null) con.Close();
+                //var con = storageDbCatalog.ActiveConnection as ADODB.Connection;
+                //if (con != null) con.Close();
                 DialogResult dialogResult = DialogResult.Yes;
                 if (question) { dialogResult = MessageBox.Show("Would you like to delete the temporary database?" + Environment.NewLine + accessStorageDB, "", MessageBoxButtons.YesNo); }
                 if (dialogResult == DialogResult.Yes ) { System.IO.File.Delete(accessStorageDB); }
@@ -158,9 +152,58 @@ namespace Report_generator
             dataObjectsListView.Select();
             EditMode();
         }
+        private OleDbParameter GetOleDbParam(string name, int code)
+        {
+            OleDbParameter newParameter = new OleDbParameter(); 
+            newParameter.ParameterName = @"@" + name;
+            switch(code)
+            {
+                case 0: newParameter.OleDbType = OleDbType.VarWChar;
+                break;
+                case 1: newParameter.OleDbType = OleDbType.Date;
+                break;
+                case 2: newParameter.OleDbType = OleDbType.Boolean;
+                break;
+                case 3: newParameter.OleDbType = OleDbType.Double;
+                break;
+            }
+            newParameter.Value = null;
+            return newParameter;
+        }
+        private void CreateTemporaryDatabase()
+        {
+            try
+            {          
+                //using(var con = new OleDbConnection(JazzyFunctionsByPatryk.GetConnectionString(accessStorageDB))
+                //{
+
+                
+                //    con.Open();
+
+                storageDbCatalog = new Catalog();
+                SetStringAccessStorageDB();
+                storageDbCatalog.Create(JazzyFunctionsByPatryk.GetConnectionString(accessStorageDB));
+                System.Runtime.InteropServices.Marshal.FinalReleaseComObject(storageDbCatalog.ActiveConnection);
+                System.Runtime.InteropServices.Marshal.FinalReleaseComObject(storageDbCatalog);
+                    //}
+                //storageDbCatalog.ActiveConnection.Close();
+                //storageDbCatalog = null;
+
+            }
+            catch (Exception e) { MessageBox.Show(e.Message.ToString()); }
+        }
         private void masterQueryLoadButton_Click(object sender, EventArgs e)
         {
             CreateTemporaryDatabase();
+            var con = new OleDbConnection(JazzyFunctionsByPatryk.GetConnectionString(accessStorageDB));
+            con.Open();
+            //if (con != null) con.Close();
+            //var con = new OleDbConnection(JazzyFunctionsByPatryk.GetConnectionString(accessStorageDB));
+            //con.Open();
+            //MessageBox.Show(con.ConnectionString);
+            //MessageBox.Show(con.DataSource);
+            //if (con != null) { MessageBox.Show(con.State.ToString()); }
+
             foreach (var key in dataObjectCollecion.Keys)
             {
                 DataObject currentDataObject = dataObjectCollecion[key];
@@ -168,49 +211,54 @@ namespace Report_generator
                 newTable.Name = currentDataObject.Name;
                 DataTable currentDatatable = currentDataObject.DataTable;
                 //ADODB.Parameter newParameter;
+                //OleDbParameter newParameter;
                 try
-                { 
+                {
+                    cmdDraft = new OleDbCommand();//new AdodbCommandDraft(storageDbCatalog.ActiveConnection);
+                    cmdDraft.Connection = con;
+                    cmdDraft.CommandType = CommandType.StoredProcedure;
                     foreach (DataColumn col in currentDatatable.Columns)
                     {
-                        //var con = storageDbCatalog.ActiveConnection as ADODB.Connection;
-                       cmdDraft =  new ADODB.Command();//new AdodbCommandDraft(storageDbCatalog.ActiveConnection);
-                       cmdDraft.ActiveConnection=storageDbCatalog.ActiveConnection;
-                   
-
+                       //cmdDraft.ActiveConnection=storageDbCatalog.ActiveConnection;
                         switch(col.DataType.ToString())
                         {
                             case "System.String": case "System.Char": case "System.Guid":
                                 newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adVarWChar);//ADOX.DataTypeEnum.adVarWChar
-                                cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adVarWChar, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
+                                cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName,0));
+                                //cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adVarWChar, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
                                 //newParameter = cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adVarWChar, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
                                 //cmdDraft.Parameters.Append(newParameter); 
                                 break;
                             case "System.DateTime": case "System.TimeSpan":
                                 newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adDate);
-                                cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adDate, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
+                                cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName, 1));
+                                //cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adDate, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
                                 //newParameter = cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adDate, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
                                 //cmdDraft.Parameters.Append(newParameter); 
                                 break;
                             case "System.Boolean":
                                 newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adBoolean);
+                                cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName, 2));
                                 //newParameter = cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adBoolean, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
                                 //cmdDraft.Parameters.Append(newParameter); 
                                 break;
                             default:/*"System.Double", "System.Decimal","System.Byte","System.Int16","System.Int32","System.Int64","System.SByte","System.Single","System.UInt16","System.UInt32","System.UInt64" */
                                 newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adDouble);
-                                cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adDouble, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
+                                cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName, 3));
+                                //cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adDouble, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
                                 //newParameter = cmdDraft.CreateParameter(@"@" + col.ColumnName, ADODB.DataTypeEnum.adDouble, ADODB.ParameterDirectionEnum.adParamInput, -1, null);
                                 //cmdDraft.Parameters.Append(newParameter); 
                                 break;
                         }
                     }
                     storageDbCatalog.Tables.Append(newTable);
-
+                    //MessageBox.Show(cmdDraft.Parameters.Count.ToString() + ": " + cmdDraft.Parameters[@"@Code"].Value);
                 
-                    object obj = new object();
+                    //object obj = new object();
                     string sqlString = string.Empty;
-                    ADODB.Parameter currentParameter;
+                    //ADODB.Parameter currentParameter;
                     int currentRowNumber;
+                    OleDbCommand cmd;
 
                         foreach (DataRow row in currentDatatable.Rows)
                         { 
@@ -220,21 +268,25 @@ namespace Report_generator
                             //var cmd = new System.Data.OleDb.OleDbCommand(sqlString, con);
                             //using(con)//System.Data.OleDb.OleDbCommand())
                             //{
-                            ADODB.Command cmd= cmdDraft; 
-                        
-                            cmd.CommandText = sqlString;
+                            cmd = cmdDraft;
+                            //cmd.Connection.Open();
+                            //MessageBox.Show(cmd.Connection.State.ToString());
+                            //cmd.Connection = storageDbCatalog.ActiveConnection as OleDbConnection;
+                            //cmd.Connection.Open();// = cmdDraft.Connection;
                             // ADODB.CommandTypeEnum.adCmdText for oridinary SQL statements;  
                             // ADODB.CommandTypeEnum.adCmdStoredProc for stored procedures. 
-                            cmd.CommandType = ADODB.CommandTypeEnum.adCmdText; 
+                            //cmd.CommandType = ADODB.CommandTypeEnum.adCmdText; 
                             foreach (DataColumn col in currentDatatable.Columns)
                             {
-                                cmd.Parameters[col.ColumnName].Value = row[col.ColumnName];
+                                cmd.Parameters[@"@" + col.ColumnName].Value = row[col.ColumnName];
                                 //currentParameter = cmd.Parameters[col.ColumnName];
                                 //currentParameter.Value = row[col.ColumnName];//currentDatatable.Rows[currentRowNumber]
                                 //ADODB.Parameter param = cmd.CreateParameter()
                             }
+                            cmd.ExecuteNonQuery();
                             //}
                         }
+                        
                 }
                 catch (Exception ex) { MessageBox.Show(ex.Message, ex.Source); }
                 finally { TerminateDB(); }
@@ -246,7 +298,7 @@ namespace Report_generator
             string columnsNames = string.Empty;
             string columnsValues = string.Empty;
             foreach (DataColumn col in dt.Columns)
-            { columnsNames = columnsNames + col.ColumnName + ", "; columnsValues = columnsValues + @"@" + col.ColumnName + ", "; }
+            { columnsNames = columnsNames + "[" + col.ColumnName + "]" + ", "; columnsValues = columnsValues + @"@" + col.ColumnName + ", "; }
             columnsNames = columnsNames.Remove(columnsNames.Length - 2);/*For removing comma*/
             columnsValues = columnsValues.Remove(columnsValues.Length - 2);
 
@@ -273,17 +325,6 @@ namespace Report_generator
             return fullReturnString;
                             //conPeople.Execute("INSERT INTO Persons(LastName, Gender, FirstName) " +
                             //  "VALUES('Germain', 'Male', 'Ndongo');", out obj, 0);
-        }
-        private void CreateTemporaryDatabase()
-        {
-            try
-            {           
-                storageDbCatalog = new Catalog();
-                SetStringAccessStorageDB();
-                storageDbCatalog.Create(JazzyFunctionsByPatryk.GetConnectionString(accessStorageDB));
-                //storageDbCatalog = null;
-            }
-            catch (Exception e) { MessageBox.Show(e.Message.ToString()); }
         }
         private void SetStringAccessStorageDB()
         {
