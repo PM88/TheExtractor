@@ -210,7 +210,6 @@ namespace Report_generator
                     storageDbCatalog.Tables.Append(newTable);
 
                     var con = new OleDbConnection(masterConnString);
-                    con.Open();
 
                     cmdDraft = new OleDbCommand();//new AdodbCommandDraft(storageDbCatalog.ActiveConnection);
                     cmdDraft.Connection = con;
@@ -221,27 +220,23 @@ namespace Report_generator
                         switch(col.DataType.ToString())
                         {
                             case "System.String": case "System.Char": case "System.Guid":
-                                newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adVarWChar);//ADOX.DataTypeEnum.adVarWChar
-                                cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName,0));
+                                cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName,0));//ADOX.DataTypeEnum.adVarWChar
                                 break;
                             case "System.DateTime": case "System.TimeSpan":
-                                newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adDate);
                                 cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName, 1));
                                 break;
                             case "System.Boolean":
-                                newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adBoolean);
                                 cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName, 2));
                                 break;
                             default:/*"System.Double", "System.Decimal","System.Byte","System.Int16","System.Int32","System.Int64","System.SByte","System.Single","System.UInt16","System.UInt32","System.UInt64" */
-                                newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adDouble);
                                 cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName, 3));
                                 break;
                         }
                     }
                     
-                    
 
                     OleDbCommand cmd;
+                    con.Open();
                     foreach (DataRow row in currentDatatable.Rows)
                     { 
                         //currentRowNumber = currentDatatable.Rows.IndexOf(row);
@@ -250,6 +245,8 @@ namespace Report_generator
                         { cmd.Parameters[@"@" + GetCleanParameterName(col.ColumnName)].Value = row[col.ColumnName]; }
                         cmd.ExecuteNonQuery(); //test
                     }
+                    //pickup; run master query
+                    con.Close(); 
 
                     //test
                     //System.Data.DataTable excelSheetDataTable;
@@ -260,7 +257,7 @@ namespace Report_generator
                         
                 }
                 catch (Exception ex) { MessageBox.Show(ex.Message, ex.Source); }
-                finally { con.Close(); TerminateDB(); }
+                finally { TerminateDB(); }
             }
                        
         }
