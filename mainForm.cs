@@ -19,16 +19,20 @@ namespace Report_generator
 {
     public partial class mainForm : Form
     {
+        public const string appVersion = "2.0.0.0 BETA";
         public ADOX.Catalog storageDbCatalog;
         public Dictionary<string, DataObject> dataObjectCollecion;
         public string currentFolder;
-        public string accessStorageDB;
+        public string accessStorageDbPath;
         public OleDbCommand cmdDraft;
         public string masterConnString;
 
         public mainForm() 
         { 
-            InitializeComponent(); dataObjectCollecion = new Dictionary<string, DataObject>();
+            InitializeComponent();
+            flexiLabel.Text = "Welcome to the Extractor v " + appVersion;
+            this.Text = "The Extractor v " + appVersion;
+            dataObjectCollecion = new Dictionary<string, DataObject>();
             currentFolder = System.IO.Path.GetDirectoryName(Application.ExecutablePath) + @"\";
             CheckNecessaryFiles();
         }
@@ -39,7 +43,7 @@ namespace Report_generator
             string[] criticalFiles = { adoDbLibrary, vbLibrary };
 
             foreach (string filePath in criticalFiles)
-            { if (!(System.IO.File.Exists(filePath))) { MessageBox.Show("Critical file was not found. The application will exit." + Environment.NewLine + accessStorageDB); Environment.Exit(1); } }
+            { if (!(System.IO.File.Exists(filePath))) { MessageBox.Show("Critical file was not found. The application will exit." + Environment.NewLine + accessStorageDbPath); Environment.Exit(1); } }
         }
         private void excelFilePathButton_Click(object sender, EventArgs e)
         {
@@ -90,21 +94,34 @@ namespace Report_generator
         private void quitButton_Click(object sender, EventArgs e)
         {
             /*Terminate the storage database connection and exit*/
-
             TerminateDB(true);
             Environment.Exit(1);
         }
         private void TerminateDB(bool question = false)
         {
-            if (System.IO.File.Exists(accessStorageDB))
+            if (System.IO.File.Exists(accessStorageDbPath))
             {
-                var con = storageDbCatalog.ActiveConnection as ADODB.Connection;
-                if (con != null) con.Close();
+                try
+                {
+                    var con = storageDbCatalog.ActiveConnection as ADODB.Connection;
+                    if (con != null) con.Close();
+                }
+                catch (Exception e) { }
+
                 //System.Runtime.InteropServices.Marshal.FinalReleaseComObject(storageDbCatalog.ActiveConnection);
                 System.Runtime.InteropServices.Marshal.FinalReleaseComObject(storageDbCatalog);
                 DialogResult dialogResult = DialogResult.Yes;
-                if (question) { dialogResult = MessageBox.Show("Would you like to delete the temporary database?" + Environment.NewLine + accessStorageDB, "", MessageBoxButtons.YesNo); }
-                if (dialogResult == DialogResult.Yes) { try { System.IO.File.Delete(accessStorageDB); } catch (Exception e) { MessageBox.Show(e.Message); } }
+                if (question) { dialogResult = MessageBox.Show("Would you like to delete the temporary database?" + Environment.NewLine + accessStorageDbPath, "", MessageBoxButtons.YesNo); }
+                
+                string accessStorageLinkPath = accessStorageDbPath.Replace(".accdb", ".laccdb");
+                //var nl = Environment.NewLine;
+                string separator = Environment.NewLine + "---" + Environment.NewLine;
+                if (dialogResult == DialogResult.Yes) 
+                { 
+                    try { System.IO.File.Delete(accessStorageDbPath); }
+                    catch (Exception e)
+                    { MessageBox.Show("Could not delete the temporary database. Please do it manually:" + separator + accessStorageDbPath + separator + accessStorageLinkPath); }
+                }
             }
         }
         private void masterButton_Click(object sender, EventArgs e) { DemSwitchez(2,"Master report"); }
@@ -171,14 +188,14 @@ namespace Report_generator
             newParameter.Value = null;
             return newParameter;
         }
-        private string GetCleanParameterName(string name) { return name.Replace(" ", ""); }
+        private string GetCleanParameterName(string name) { return GetCleanColumnName(name).Replace(" ", ""); }
         private bool CreateTemporaryDatabase()
         {
             try
             {          
                 storageDbCatalog = new Catalog();
                 SetStringAccessStorageDB();
-                masterConnString = JazzyFunctionsByPatryk.GetConnectionString(accessStorageDB);
+                masterConnString = JazzyFunctionsByPatryk.GetConnectionString(accessStorageDbPath);
                 storageDbCatalog.Create(masterConnString);
                 return true;
             }
@@ -188,78 +205,88 @@ namespace Report_generator
         {
             if(!(CreateTemporaryDatabase())) {return;}
 
-            foreach (var key in dataObjectCollecion.Keys)
+            /* Create tables it temp DB with data */
+            try
             {
-                DataObject currentDataObject = dataObjectCollecion[key];
-                var newTable = new ADOX.Table();
-                newTable.Name = currentDataObject.Name;
-                DataTable currentDatatable = currentDataObject.DataTable;
-
-                try
+                foreach (var key in dataObjectCollecion.Keys)
                 {
+                    /* Create empty table */
+                    DataObject currentDataObject = dataObjectCollecion[key];
+                    var newTable = new ADOX.Table();
+                    newTable.Name = currentDataObject.Name;
+                    DataTable currentDatatable = currentDataObject.DataTable;
+
+                    foreach (DataColumn col in currentDatatable.Columns)
+                    {
+                        string cleanedColumnName = GetCleanColumnName(col.ColumnName);
+                        switch (col.DataType.ToString())
+                        {
+                            case "System.String":
+                            case "System.Char":
+                            case "System.Guid": newTable.Columns.Append(cleanedColumnName, ADOX.DataTypeEnum.adVarWChar); break;/*ADOX.DataTypeEnum.adVarWChar*/
+                            case "System.DateTime":
+                            case "System.TimeSpan": newTable.Columns.Append(cleanedColumnName, ADOX.DataTypeEnum.adDate); break;
+                            case "System.Boolean": newTable.Columns.Append(cleanedColumnName, ADOX.DataTypeEnum.adBoolean); break;
+                            default: newTable.Columns.Append(cleanedColumnName, ADOX.DataTypeEnum.adDouble); break;/*"System.Double", "System.Decimal","System.Byte","System.Int16","System.Int32","System.Int64","System.SByte","System.Single","System.UInt16","System.UInt32","System.UInt64" */
+                        }
+                    }
+                    storageDbCatalog.Tables.Append(newTable);
+                    /* Create new connection - required because we have added a table */
+                    var con = new OleDbConnection(masterConnString);
+
+                    cmdDraft = new OleDbCommand();
+                    cmdDraft.Connection = con;
+                    cmdDraft.CommandType = CommandType.Text; /* StoredProcedure is an alternative */
+
+                    /* Create insert command with parameters */
+                    cmdDraft.CommandText = GetSqlInsertNQuery(currentDataObject.DataTable, currentDataObject.Name);
                     foreach (DataColumn col in currentDatatable.Columns)
                     {
                         switch (col.DataType.ToString())
                         {
-                            case "System.String": case "System.Char": case "System.Guid": newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adVarWChar); break;
-                            case "System.DateTime": case "System.TimeSpan": newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adDate); break;
-                            case "System.Boolean": newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adBoolean); break;
-                            default: newTable.Columns.Append(col.ColumnName, ADOX.DataTypeEnum.adDouble); break;
+                            case "System.String":
+                            case "System.Char":
+                            case "System.Guid": cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName, 0)); break;
+                            case "System.DateTime":
+                            case "System.TimeSpan": cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName, 1)); break;
+                            case "System.Boolean": cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName, 2)); break;
+                            default: cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName, 3)); break;
                         }
                     }
-                    storageDbCatalog.Tables.Append(newTable);
 
-                    var con = new OleDbConnection(masterConnString);
-
-                    cmdDraft = new OleDbCommand();//new AdodbCommandDraft(storageDbCatalog.ActiveConnection);
-                    cmdDraft.Connection = con;
-                    cmdDraft.CommandType = CommandType.Text;
-                    cmdDraft.CommandText = GetSqlInsertNQuery(currentDataObject.DataTable, currentDataObject.Name);
-                    foreach (DataColumn col in currentDatatable.Columns)
-                    {
-                        switch(col.DataType.ToString())
-                        {
-                            case "System.String": case "System.Char": case "System.Guid":
-                                cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName,0));//ADOX.DataTypeEnum.adVarWChar
-                                break;
-                            case "System.DateTime": case "System.TimeSpan":
-                                cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName, 1));
-                                break;
-                            case "System.Boolean":
-                                cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName, 2));
-                                break;
-                            default:/*"System.Double", "System.Decimal","System.Byte","System.Int16","System.Int32","System.Int64","System.SByte","System.Single","System.UInt16","System.UInt32","System.UInt64" */
-                                cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName, 3));
-                                break;
-                        }
-                    }
-                    
-
+                    /* Fill the new table with data */
                     OleDbCommand cmd;
                     con.Open();
                     foreach (DataRow row in currentDatatable.Rows)
-                    { 
-                        //currentRowNumber = currentDatatable.Rows.IndexOf(row);
+                    {
                         cmd = cmdDraft;
                         foreach (DataColumn col in currentDatatable.Columns)
                         { cmd.Parameters[@"@" + GetCleanParameterName(col.ColumnName)].Value = row[col.ColumnName]; }
                         cmd.ExecuteNonQuery(); //test
                     }
-                    //pickup; run master query
-                    con.Close(); 
-
-                    //test
-                    //System.Data.DataTable excelSheetDataTable;
-                    //string queryString = "SELECT * FROM " + currentDataObject.Name;
-                    //string excelFileConnectionString = JazzyFunctionsByPatryk.GetConnectionString(accessStorageDB);
-                    //excelSheetDataTable = JazzyFunctionsByPatryk.GetDataTable(excelFileConnectionString, queryString);
-                    //this.previewGridView.DataSource = excelSheetDataTable;
-                        
+                    con.Close();
                 }
-                catch (Exception ex) { MessageBox.Show(ex.Message, ex.Source); }
-                finally { TerminateDB(); }
+
+                /* Temp DB is ready, so let's run the master query */
+                //bool dbManualMode = false;
+                string masterQuery = masterQueryTextBox.Text;
+                if (masterQuery != "") 
+                { 
+                    var masterDataTable = JazzyFunctionsByPatryk.GetDataTable(masterConnString, masterQuery);
+                    this.previewGridView.DataSource = masterDataTable;
+                }
             }
-                       
+            catch (Exception ex) { MessageBox.Show(ex.Message, ex.Source); }
+            finally { TerminateDB(true); }
+                    
+        }
+
+        private string GetCleanColumnName(string oldName)
+        {
+            string[] illegals = { @"!", @"@", @"#", @"$", @"%", @"^", @"&", @"*", @"/", @"\" };//@"(", @")",
+            string newName = oldName;
+            foreach (string currentIllegal in illegals) { newName = newName.Replace(currentIllegal, " "); }
+            return newName;
         }
         private string GetSqlInsertNQuery(DataTable dt, string tableName)
         {
@@ -275,9 +302,9 @@ namespace Report_generator
         }
         private void SetStringAccessStorageDB()
         {
-            accessStorageDB = currentFolder + "ExtractorStorage.accdb";
+            accessStorageDbPath = currentFolder + "ExtractorStorage.accdb";
             int i = 1;
-            do { accessStorageDB = currentFolder + "(" + i + ")" + "ExtractorStorage.accdb"; } while (System.IO.File.Exists(accessStorageDB));
+            do { accessStorageDbPath = currentFolder + "(" + i + ")" + "ExtractorStorage.accdb"; i += 1; } while (System.IO.File.Exists(accessStorageDbPath));
         }
         private void dataObjectsListView_SelectedIndexChanged(object sender, EventArgs e) { PreviewMode(); }
         private void PreviewMode()
@@ -308,6 +335,7 @@ namespace Report_generator
 
             excelFilePathTextbox.Text = "";
             excelFileSheetsComboBox.DataSource = null; excelFileSheetsComboBox.Items.Clear();
+            DemSwitchez(99);
         }
         private void tableEditButton_Click(object sender, EventArgs e) { EditMode(); }
         private void EditMode()

@@ -266,7 +266,7 @@
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(89, 20);
             this.button1.TabIndex = 39;
-            this.button1.Text = "Save Settings";
+            this.button1.Text = "Save preset";
             this.button1.UseVisualStyleBackColor = true;
             // 
             // button2
@@ -276,7 +276,7 @@
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(89, 20);
             this.button2.TabIndex = 40;
-            this.button2.Text = "Load Settings";
+            this.button2.Text = "Load presets";
             this.button2.UseVisualStyleBackColor = true;
             // 
             // saveDataObjectButton

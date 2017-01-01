@@ -65,13 +65,12 @@ namespace Report_generator
         //}
         public static System.Data.DataTable GetDataTable(string connectionString, string queryString)
         {
-            //Establish connection
             var fileConnection = new System.Data.OleDb.OleDbConnection(connectionString);
-            var dataAdapter = new System.Data.OleDb.OleDbDataAdapter(queryString, fileConnection);
             var dataTable = new System.Data.DataTable();
-
-            //Run the command to fill the data table
-            try { dataAdapter.Fill(dataTable); }
+            try
+            {
+            var dataAdapter = new System.Data.OleDb.OleDbDataAdapter(queryString, fileConnection);
+            dataAdapter.Fill(dataTable); }
             catch (Exception e) { MessageBox.Show(e.Message.ToString()); } //"Connection failed. Check the SQL query."
             finally { fileConnection.Close(); }
 
@@ -91,7 +90,7 @@ namespace Report_generator
             {
                 case ".xls": strExtendedProperties = "Excel 8.0; HDR = Yes; IMEX = 1;";  break; 
                 case ".xlsx": strExtendedProperties = "Excel 12.0 Xml; HDR = Yes; IMEX = 1;";  break;
-                case ".xlsm": strExtendedProperties = "Excel 12.0 Macro; HDR = Yes; IMEX = 1;";  break;
+                case ".xlsm": strExtendedProperties = "Excel 12.0 Macro; HDR = Yes; IMEX = 1;Integrated Security=True;READONLY=1;"; break; //test
                 //case ".accdb": break;//strDataSource = "|DataDirectory|"; //strExtendedProperties = "Persist Security Info = False;" //sbConnection.PersistSecurityInfo = false;
                 default: break; //sbConnection.Provider = "Microsoft.Jet.Oledb.4.0";
             }
