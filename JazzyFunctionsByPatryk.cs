@@ -12,57 +12,10 @@ using System.Windows.Forms;
 
 namespace Report_generator
 {
-    public static class JazzyFunctionsByPatryk //ver271216_1
+    public static class JazzyFunctionsByPatryk //ver030116_1
     {
         public static string queryString;
         public static string connectionStringExcel;
-
-        //public void SetQueryString(string qs) { queryString = qs; }
-        //public void SetConnectionStringExcel(string excelFilePath) { connectionStringExcel = GetConnectionStringExcel(excelFilePath); }
-        public static void DataTableToCSVFile(System.Data.DataTable dt, string targetPath)
-        {
-            StringBuilder sb = new StringBuilder();
-
-            string[] columnNames = dt.Columns.Cast<DataColumn>().
-                                              Select(column => column.ColumnName).
-                                              ToArray();
-            sb.AppendLine(string.Join(",", columnNames));
-
-            foreach (DataRow row in dt.Rows)
-            {
-                string[] fields = row.ItemArray.Select(field => field.ToString()).
-                                                ToArray();
-                sb.AppendLine(string.Join(",", fields));
-            }
-
-            File.WriteAllText(targetPath, sb.ToString());
-        }
-        //public static void DataTableToXLSFile(System.Data.DataTable dt, string targetPath, string sheetName = "")
-        //{
-        //    var excelApp = new Microsoft.Office.Interop.Excel.Application();
-        //    Microsoft.Office.Interop.Excel.Workbook excelWorkBook = null;
-        //    if (! File.Exists(targetPath))
-        //    {
-        //        excelWorkBook = excelApp.Workbooks.Add();
-        //        excelWorkBook.SaveAs(targetPath);
-        //    }
-        //    else { excelWorkBook = excelApp.Workbooks.Open(targetPath); }
-            
-        //    Microsoft.Office.Interop.Excel.Worksheet excelWorkSheet = (Worksheet)excelWorkBook.Sheets.Add();
-            
-        //    if(sheetName != "") {excelWorkSheet.Name = sheetName;}
-
-        //    for (int i = 1; i < dt.Columns.Count + 1; i++)
-        //    { excelWorkSheet.Cells[1, i] = dt.Columns[i - 1].ColumnName; }
-
-        //    for (int j = 0; j < dt.Rows.Count; j++)
-        //    {
-        //        for (int k = 0; k < dt.Columns.Count; k++)
-        //        { excelWorkSheet.Cells[j + 2, k + 1] = dt.Rows[j].ItemArray[k].ToString(); }
-        //    }
-        //    excelWorkBook.Save();
-        //    KillTask("EXCEL");
-        //}
         public static System.Data.DataTable GetDataTable(string connectionString, string queryString)
         {
             var fileConnection = new System.Data.OleDb.OleDbConnection(connectionString);
@@ -158,21 +111,6 @@ namespace Report_generator
 
             if (ofd.ShowDialog() == DialogResult.OK) { return ofd.FileName; } else { return ""; }
         }
-        //public static void ReleaseObject(object obj)
-        //{
-        //    try
-        //    {
-        //        System.Runtime.InteropServices.Marshal.ReleaseComObject(obj);
-        //        obj = null;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        obj = null;
-        //        MessageBox.Show("Exception Occured while releasing object " + ex.ToString());
-        //    }
-        //    finally
-        //    { GC.Collect(); }
-        //}
         public static void KillTask(string ProcessesName)
         {
             /*Kill the all process obj from the Task Manager(Process)*/
@@ -196,6 +134,26 @@ namespace Report_generator
                 if (processInExcel.MainWindowTitle.ToString() == "") ;*/
         }
 
+
+        #region public static void ReleaseObject(object obj)
+        //public static void ReleaseObject(object obj)
+        //{
+        //    try
+        //    {
+        //        System.Runtime.InteropServices.Marshal.ReleaseComObject(obj);
+        //        obj = null;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        obj = null;
+        //        MessageBox.Show("Exception Occured while releasing object " + ex.ToString());
+        //    }
+        //    finally
+        //    { GC.Collect(); }
+        //}
+        #endregion
+        //####################################################################################################################################
+        #region  public string GetHTMLStringFromDataTable(System.Data.DataTable dt, bool enableOuterMarkupTags = true)
         //public string GetHTMLStringFromDataTable(System.Data.DataTable dt, bool enableOuterMarkupTags = true)
         //{
         //    //Convert date columns to string w/o time if 
@@ -265,6 +223,59 @@ namespace Report_generator
         //    string returnString = strHTMLBuilder.ToString();
         //    return returnString;
         //}
+        #endregion 
+        //####################################################################################################################################
+        #region public static void DataTableToCSVFile(System.Data.DataTable dt, string targetPath)
+        //public void SetQueryString(string qs) { queryString = qs; }
+        //public void SetConnectionStringExcel(string excelFilePath) { connectionStringExcel = GetConnectionStringExcel(excelFilePath); }
 
+        //public static void DataTableToCSVFile(System.Data.DataTable dt, string targetPath)
+        //{
+        //    StringBuilder sb = new StringBuilder();
+
+        //    string[] columnNames = dt.Columns.Cast<DataColumn>().
+        //                                      Select(column => column.ColumnName).
+        //                                      ToArray();
+        //    sb.AppendLine(string.Join("\t", columnNames));
+
+        //    foreach (DataRow row in dt.Rows)
+        //    {
+        //        string[] fields = row.ItemArray.Select(field => field.ToString()).
+        //                                        ToArray();
+        //        sb.AppendLine(string.Join("\t", fields));
+        //    }
+
+        //    File.WriteAllText(targetPath, sb.ToString());
+        //}
+        #endregion 
+        //####################################################################################################################################
+        #region public static void DataTableToXLSFile(System.Data.DataTable dt, string targetPath, string sheetName = "")
+        //public static void DataTableToXLSFile(System.Data.DataTable dt, string targetPath, string sheetName = "")
+        //{
+        //    var excelApp = new Microsoft.Office.Interop.Excel.Application();
+        //    Microsoft.Office.Interop.Excel.Workbook excelWorkBook = null;
+        //    if (! File.Exists(targetPath))
+        //    {
+        //        excelWorkBook = excelApp.Workbooks.Add();
+        //        excelWorkBook.SaveAs(targetPath);
+        //    }
+        //    else { excelWorkBook = excelApp.Workbooks.Open(targetPath); }
+
+        //    Microsoft.Office.Interop.Excel.Worksheet excelWorkSheet = (Worksheet)excelWorkBook.Sheets.Add();
+
+        //    if(sheetName != "") {excelWorkSheet.Name = sheetName;}
+
+        //    for (int i = 1; i < dt.Columns.Count + 1; i++)
+        //    { excelWorkSheet.Cells[1, i] = dt.Columns[i - 1].ColumnName; }
+
+        //    for (int j = 0; j < dt.Rows.Count; j++)
+        //    {
+        //        for (int k = 0; k < dt.Columns.Count; k++)
+        //        { excelWorkSheet.Cells[j + 2, k + 1] = dt.Rows[j].ItemArray[k].ToString(); }
+        //    }
+        //    excelWorkBook.Save();
+        //    KillTask("EXCEL");
+        //}
+        #endregion 
     }
 }

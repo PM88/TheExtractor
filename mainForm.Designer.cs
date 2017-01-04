@@ -54,7 +54,8 @@
             this.sourceTypesGroupBox = new System.Windows.Forms.GroupBox();
             this.sourceSharePointRadioButton = new System.Windows.Forms.RadioButton();
             this.sourceExcelRadioButton = new System.Windows.Forms.RadioButton();
-            this.exportToCsvButton = new System.Windows.Forms.Button();
+            this.totalRecordsLabel = new System.Windows.Forms.Label();
+            this.exportFromGridViewButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.previewGridView)).BeginInit();
             this.sourceTypesGroupBox.SuspendLayout();
             this.SuspendLayout();
@@ -327,16 +328,24 @@
             this.sourceExcelRadioButton.UseVisualStyleBackColor = true;
             this.sourceExcelRadioButton.CheckedChanged += new System.EventHandler(this.sourceExcelRadioButton_CheckedChanged);
             // 
-            // exportToCsvButton
+            // totalRecordsLabel
             // 
-            this.exportToCsvButton.Enabled = false;
-            this.exportToCsvButton.Location = new System.Drawing.Point(851, 593);
-            this.exportToCsvButton.Name = "exportToCsvButton";
-            this.exportToCsvButton.Size = new System.Drawing.Size(89, 20);
-            this.exportToCsvButton.TabIndex = 44;
-            this.exportToCsvButton.Text = "Export to CSV";
-            this.exportToCsvButton.UseVisualStyleBackColor = true;
-            this.exportToCsvButton.Click += new System.EventHandler(this.exportToCsvButton_Click);
+            this.totalRecordsLabel.AutoSize = true;
+            this.totalRecordsLabel.Location = new System.Drawing.Point(745, 597);
+            this.totalRecordsLabel.Name = "totalRecordsLabel";
+            this.totalRecordsLabel.Size = new System.Drawing.Size(10, 13);
+            this.totalRecordsLabel.TabIndex = 45;
+            this.totalRecordsLabel.Text = " ";
+            // 
+            // exportFromGridViewButton
+            // 
+            this.exportFromGridViewButton.Location = new System.Drawing.Point(851, 593);
+            this.exportFromGridViewButton.Name = "exportFromGridViewButton";
+            this.exportFromGridViewButton.Size = new System.Drawing.Size(89, 20);
+            this.exportFromGridViewButton.TabIndex = 46;
+            this.exportFromGridViewButton.Text = "Export data";
+            this.exportFromGridViewButton.UseVisualStyleBackColor = true;
+            this.exportFromGridViewButton.Click += new System.EventHandler(this.exportFromGridViewButton_Click);
             // 
             // mainForm
             // 
@@ -344,7 +353,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(952, 618);
             this.ControlBox = false;
-            this.Controls.Add(this.exportToCsvButton);
+            this.Controls.Add(this.exportFromGridViewButton);
+            this.Controls.Add(this.totalRecordsLabel);
             this.Controls.Add(this.sourceTypesGroupBox);
             this.Controls.Add(this.saveDataObjectButton);
             this.Controls.Add(this.button2);
@@ -408,7 +418,8 @@
         private System.Windows.Forms.GroupBox sourceTypesGroupBox;
         private System.Windows.Forms.RadioButton sourceSharePointRadioButton;
         private System.Windows.Forms.RadioButton sourceExcelRadioButton;
-        private System.Windows.Forms.Button exportToCsvButton;
+        private System.Windows.Forms.Label totalRecordsLabel;
+        private System.Windows.Forms.Button exportFromGridViewButton;
     }
 }
 

@@ -48,7 +48,7 @@ namespace Report_generator
         private void excelFilePathButton_Click(object sender, EventArgs e)
         {
             /*Allow the user to browse for eligible Excel file*/
-            string workbookPath = JazzyFunctionsByPatryk.BrowseFilePath("Excel Files|*.xlsx;*.xls;*.xlsm;*.csv");
+            string workbookPath = JazzyFunctionsByPatryk.BrowseFilePath("Excel Files|*.xlsx;*.xls;*.xlsm");//;*.csv
             this.excelFilePathTextbox.Text = workbookPath;
             if (workbookPath == "") { return; }
 
@@ -89,7 +89,10 @@ namespace Report_generator
             //if (excelSheetDataTable != null)
             //{ if (excelSheetDataTable.Rows.Count > 0) { this.excelQueryGridView.DataSource = excelSheetDataTable; queryTextBox.Text = queryString; } }
             this.previewGridView.DataSource = excelSheetDataTable; currentQueryTextBox.Text = queryString;
+            UpdateTotalRecords(excelSheetDataTable);
         }
+        private void UpdateTotalRecords(DataTable dt = null)
+        { if (dt != null) { this.totalRecordsLabel.Text = "Total records: " + dt.Rows.Count; } else { this.totalRecordsLabel.Text = ""; } }
         private void mainForm_Load(object sender, EventArgs e) { /*DemSwitchez(0);*/ }
         private void quitButton_Click(object sender, EventArgs e)
         {
@@ -101,14 +104,15 @@ namespace Report_generator
         {
             if (System.IO.File.Exists(accessStorageDbPath))
             {
+                //ADODB.Connection con = null;
                 try
                 {
-                    var con = storageDbCatalog.ActiveConnection as ADODB.Connection;
+                    var con = storageDbCatalog.ActiveConnection as OleDbConnection;//ADODB.Connection
                     if (con != null) con.Close();
                 }
                 catch (Exception e) { }
 
-                //System.Runtime.InteropServices.Marshal.FinalReleaseComObject(storageDbCatalog.ActiveConnection);
+                //System.Runtime.InteropServices.Marshal.FinalReleaseComObject(con);//storageDbCatalog.ActiveConnection
                 System.Runtime.InteropServices.Marshal.FinalReleaseComObject(storageDbCatalog);
                 DialogResult dialogResult = DialogResult.Yes;
                 if (question) { dialogResult = MessageBox.Show("Would you like to delete the temporary database?" + Environment.NewLine + accessStorageDbPath, "", MessageBoxButtons.YesNo); }
@@ -173,7 +177,7 @@ namespace Report_generator
         private OleDbParameter GetOleDbParam(string name, int code)
         {
             OleDbParameter newParameter = new OleDbParameter();
-            newParameter.ParameterName = @"@" + GetCleanParameterName(name);
+            newParameter.ParameterName = @"@" + name;// GetCleanParameterName(name);
             switch(code)
             {
                 case 0: newParameter.OleDbType = OleDbType.VarWChar;
@@ -188,7 +192,7 @@ namespace Report_generator
             newParameter.Value = null;
             return newParameter;
         }
-        private string GetCleanParameterName(string name) { return GetCleanColumnName(name).Replace(" ", ""); }
+        //private string GetCleanParameterName(string name) { return GetCleanColumnName(name).Replace(" ", ""); }
         private bool CreateTemporaryDatabase()
         {
             try
@@ -206,6 +210,7 @@ namespace Report_generator
             if(!(CreateTemporaryDatabase())) {return;}
 
             /* Create tables it temp DB with data */
+            OleDbConnection con = new OleDbConnection();
             try
             {
                 foreach (var key in dataObjectCollecion.Keys)
@@ -218,27 +223,31 @@ namespace Report_generator
 
                     foreach (DataColumn col in currentDatatable.Columns)
                     {
-                        string cleanedColumnName = GetCleanColumnName(col.ColumnName);
+                        ADOX.Column dbField = new Column();
+                        dbField.Name = GetCleanColumnName(col.ColumnName);
+                        dbField.Attributes = ColumnAttributesEnum.adColNullable;
                         switch (col.DataType.ToString())
                         {
                             case "System.String":
                             case "System.Char":
-                            case "System.Guid": newTable.Columns.Append(cleanedColumnName, ADOX.DataTypeEnum.adVarWChar); break;/*ADOX.DataTypeEnum.adVarWChar*/
+                            case "System.Guid": dbField.Type = ADOX.DataTypeEnum.adVarWChar; break;//newTable.Columns.Append(cleanedColumnName, ADOX.DataTypeEnum.adVarWChar);
                             case "System.DateTime":
-                            case "System.TimeSpan": newTable.Columns.Append(cleanedColumnName, ADOX.DataTypeEnum.adDate); break;
-                            case "System.Boolean": newTable.Columns.Append(cleanedColumnName, ADOX.DataTypeEnum.adBoolean); break;
-                            default: newTable.Columns.Append(cleanedColumnName, ADOX.DataTypeEnum.adDouble); break;/*"System.Double", "System.Decimal","System.Byte","System.Int16","System.Int32","System.Int64","System.SByte","System.Single","System.UInt16","System.UInt32","System.UInt64" */
+                            case "System.TimeSpan": dbField.Type = ADOX.DataTypeEnum.adDate; break;
+                            case "System.Boolean": dbField.Type = ADOX.DataTypeEnum.adBoolean; break;
+                            default: dbField.Type = ADOX.DataTypeEnum.adDouble; break;/*"System.Double", "System.Decimal","System.Byte","System.Int16","System.Int32","System.Int64","System.SByte","System.Single","System.UInt16","System.UInt32","System.UInt64" */
                         }
+                        newTable.Columns.Append(dbField);
                     }
                     storageDbCatalog.Tables.Append(newTable);
                     /* Create new connection - required because we have added a table */
-                    var con = new OleDbConnection(masterConnString);
+                    con = new OleDbConnection(masterConnString);
 
                     cmdDraft = new OleDbCommand();
                     cmdDraft.Connection = con;
                     cmdDraft.CommandType = CommandType.Text; /* StoredProcedure is an alternative */
 
                     /* Create insert command with parameters */
+                    int paramIteration = 1;
                     cmdDraft.CommandText = GetSqlInsertNQuery(currentDataObject.DataTable, currentDataObject.Name);
                     foreach (DataColumn col in currentDatatable.Columns)
                     {
@@ -246,12 +255,13 @@ namespace Report_generator
                         {
                             case "System.String":
                             case "System.Char":
-                            case "System.Guid": cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName, 0)); break;
+                            case "System.Guid": cmdDraft.Parameters.Add(GetOleDbParam(paramIteration.ToString(), 0)); break;
                             case "System.DateTime":
-                            case "System.TimeSpan": cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName, 1)); break;
-                            case "System.Boolean": cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName, 2)); break;
-                            default: cmdDraft.Parameters.Add(GetOleDbParam(col.ColumnName, 3)); break;
+                            case "System.TimeSpan": cmdDraft.Parameters.Add(GetOleDbParam(paramIteration.ToString(), 1)); break;
+                            case "System.Boolean": cmdDraft.Parameters.Add(GetOleDbParam(paramIteration.ToString(), 2)); break;
+                            default: cmdDraft.Parameters.Add(GetOleDbParam(paramIteration.ToString(), 3)); break;
                         }
+                        paramIteration += 1;
                     }
 
                     /* Fill the new table with data */
@@ -260,9 +270,10 @@ namespace Report_generator
                     foreach (DataRow row in currentDatatable.Rows)
                     {
                         cmd = cmdDraft;
+                        paramIteration = 1;
                         foreach (DataColumn col in currentDatatable.Columns)
-                        { cmd.Parameters[@"@" + GetCleanParameterName(col.ColumnName)].Value = row[col.ColumnName]; }
-                        cmd.ExecuteNonQuery(); //test
+                        { cmd.Parameters[@"@" + paramIteration].Value = row[col.ColumnName]; paramIteration += 1; }//GetCleanParameterName(col.ColumnName)
+                        cmd.ExecuteNonQuery(); 
                     }
                     con.Close();
                 }
@@ -277,7 +288,7 @@ namespace Report_generator
                 }
             }
             catch (Exception ex) { MessageBox.Show(ex.Message, ex.Source); }
-            finally { TerminateDB(true); }
+            finally { TerminateDB(true); }//if (con != null)  con.Close();
                     
         }
 
@@ -292,9 +303,10 @@ namespace Report_generator
         {
             string columnsNames = string.Empty;
             string columnsValues = string.Empty;
+            int paramIteration = 1;
             foreach (DataColumn col in dt.Columns)
-            { columnsNames = columnsNames + "[" + col.ColumnName + "]" + ", "; columnsValues = columnsValues + @"@" + GetCleanParameterName(col.ColumnName) + ", "; }
-            columnsNames = columnsNames.Remove(columnsNames.Length - 2);/*For removing comma*/
+            { columnsNames = columnsNames + "[" + GetCleanColumnName(col.ColumnName) + "]" + ", "; columnsValues = columnsValues + @"@" + paramIteration + ", "; paramIteration += 1; }//GetCleanParameterName(col.ColumnName)
+            columnsNames = columnsNames.Remove(columnsNames.Length - 2);/*For removing final comma*/
             columnsValues = columnsValues.Remove(columnsValues.Length - 2);
 
             string fullReturnString = "INSERT INTO [" + tableName + "] (" + columnsNames + ") VALUES(" + columnsValues + ");";
@@ -307,6 +319,23 @@ namespace Report_generator
             do { accessStorageDbPath = currentFolder + "(" + i + ")" + "ExtractorStorage.accdb"; i += 1; } while (System.IO.File.Exists(accessStorageDbPath));
         }
         private void dataObjectsListView_SelectedIndexChanged(object sender, EventArgs e) { PreviewMode(); }
+        private void dataObjectsListView_MouseUp(object sender, MouseEventArgs e) /* Not working at the moment */
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                //if (listView1.FocusedItem.Bounds.Contains(e.Location) == true)
+                //{ contextMenuStrip1.Show(Cursor.Position); }
+                if (dataObjectsListView.SelectedItems.Count == 0) { return; }
+                string selectedName = dataObjectsListView.SelectedItems[0].SubItems[0].Text;
+                DataObject currentDataObject = dataObjectCollecion[selectedName];
+
+                string selectedDataSourceNewName = Interaction.InputBox("Provide the new name of the data source.", "Enter name", currentDataObject.Name); //, "Default Text"
+                if (dataObjectCollecion.ContainsKey(selectedDataSourceNewName)) { MessageBox.Show("There is already a data object with that name!"); return; }
+                if (selectedDataSourceNewName == "") { MessageBox.Show("Incorrect name!"); return; }
+
+                dataObjectCollecion[selectedName].Name = selectedDataSourceNewName;
+            }
+        }
         private void PreviewMode()
         {
             queryLoadButton.Enabled = false;
@@ -324,6 +353,7 @@ namespace Report_generator
             //excelFileBrowsePathButton.Visible = false;
             excelFilePathTextbox.Text = "";
             excelFileSheetsComboBox.DataSource = null; excelFileSheetsComboBox.Items.Clear();
+            UpdateTotalRecords(currentDataObject.DataTable);
         }
         private void tableDeleteButton_Click(object sender, EventArgs e)
         {
@@ -336,6 +366,7 @@ namespace Report_generator
             excelFilePathTextbox.Text = "";
             excelFileSheetsComboBox.DataSource = null; excelFileSheetsComboBox.Items.Clear();
             DemSwitchez(99);
+            UpdateTotalRecords();
         }
         private void tableEditButton_Click(object sender, EventArgs e) { EditMode(); }
         private void EditMode()
@@ -360,11 +391,12 @@ namespace Report_generator
             excelFileBrowsePathButton.Visible = true;
             excelFileSheetsComboBox.Visible = true;
         }
-        private void exportToCsvButton_Click(object sender, EventArgs e)
+        private void exportFromGridViewButton_Click(object sender, EventArgs e)
         {
-            if (previewGridView.DataSource == null) { return; }
-            string savePath = JazzyFunctionsByPatryk.BrowseSavePath("csv");
-            JazzyFunctionsByPatryk.DataTableToCSVFile(this.previewGridView.DataSource as System.Data.DataTable, savePath);
+            if (this.previewGridView.DataSource == null) { return; }
+            string savePath = JazzyFunctionsByPatryk.BrowseSavePath("xls");
+            try { JazzyFunctionsByPatryk.DataTableToCSVFile(this.previewGridView.DataSource as System.Data.DataTable, savePath); MessageBox.Show("Saved successfully."); }
+            catch (Exception ex) { MessageBox.Show(ex.Message); }
         }
     }
 }
