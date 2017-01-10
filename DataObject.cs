@@ -8,9 +8,12 @@ namespace Report_generator
 {
     public class DataObject
     {
-        public string Name;
-        public string sqlQuery;
+        public string Name; //Datatable has tablename property but Data Object not always has datatable
+        public string SqlQuery;
         public System.Data.DataTable DataTable;
+        public string ExcelFilePath;
+        public string ExcelFileSheet;
+        public bool PersStorage;
         //public string sourceAddress;
         //public string sourceExcelSheet;
 
@@ -19,7 +22,7 @@ namespace Report_generator
         // Method
         public void SetQueryAndDataTable(string sql, string excelFilePath)
         {
-            sqlQuery = sql;
+            SqlQuery = sql;
             DataTable = JazzyFunctionsByPatryk.GetDataTable(JazzyFunctionsByPatryk.GetConnectionString(excelFilePath), sql);
         }
     }

@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using Microsoft.VisualBasic;
 using ADOX;
 using System.Data.OleDb;
 
@@ -26,6 +25,7 @@ namespace Report_generator
         public string accessStorageDbPath;
         public OleDbCommand cmdDraft;
         public string masterConnString;
+        //public string masterQuery;
 
         public mainForm() 
         { 
@@ -47,6 +47,28 @@ namespace Report_generator
         }
         private void excelFilePathButton_Click(object sender, EventArgs e)
         {
+            ///*Allow the user to browse for eligible Excel file*/
+            //string workbookPath = JazzyFunctionsByPatryk.BrowseFilePath("Excel Files|*.xlsx;*.xls;*.xlsm");//;*.csv
+            //this.excelFilePathTextbox.Text = workbookPath;
+            //if (workbookPath == "") { return; }
+
+            ///*Fill the sheets list*/
+            ////string connectionString = JazzyFunctionsByPatryk.GetConnectionStringExcel(workbookPath);
+            ////if (connectionString == "") { MessageBox.Show("Could not load the sheets from the chosen Excel file."); return; }
+
+            ////var excelFileSheetsList = JazzyFunctionsByPatryk.ListSheetInExcel(connectionString);
+            //RefreshExcelSheets(workbookPath);
+
+            //this.queryLoadButton.Enabled = true;
+        }
+        private void RefreshExcelSheets(string workbookPath)
+        {
+            var excelFileSheetsList = JazzyFunctionsByPatryk.ListSheetInExcel(workbookPath);
+            if (excelFileSheetsList == null) { MessageBox.Show("Could not load the sheets. Is the Excel file correct?"); return; }
+            this.excelFileSheetsComboBox.DataSource = excelFileSheetsList;
+        }
+        private void excelFileBrowsePathButton_Click(object sender, EventArgs e)
+        {
             /*Allow the user to browse for eligible Excel file*/
             string workbookPath = JazzyFunctionsByPatryk.BrowseFilePath("Excel Files|*.xlsx;*.xls;*.xlsm");//;*.csv
             this.excelFilePathTextbox.Text = workbookPath;
@@ -57,23 +79,20 @@ namespace Report_generator
             //if (connectionString == "") { MessageBox.Show("Could not load the sheets from the chosen Excel file."); return; }
 
             //var excelFileSheetsList = JazzyFunctionsByPatryk.ListSheetInExcel(connectionString);
-            var excelFileSheetsList = JazzyFunctionsByPatryk.ListSheetInExcel(workbookPath);
-            if (excelFileSheetsList == null) { MessageBox.Show("Could not load the sheets. Is the Excel file correct?"); return; }
-            this.excelFileSheetsComboBox.DataSource = excelFileSheetsList;
+            RefreshExcelSheets(workbookPath);
 
             this.queryLoadButton.Enabled = true;
         }
-        private void excelFileSheetsComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        private void excelFileRefreshSheetsButton_Click_1(object sender, EventArgs e) { RefreshExcelSheets(this.excelFilePathTextbox.Text); }
+        //private void excelFileSheetsComboBox_SelectedIndexChanged(object sender, EventArgs e) { /*Fill the fields list*/ }
+        private void queryLoadButton_Click(object sender, EventArgs e) 
         {
-            /*Fill the fields list*/
-        }
-        private void queryLoadButton_Click(object sender, EventArgs e) { LoadQueryFromTextBoxToGridView(queryTextBox, this.excelFilePathTextbox.Text); }
-        private void LoadQueryFromTextBoxToGridView(Control currentQueryTextBox, string excelFilePath)
-        {
-            if (excelFilePath == "") { MessageBox.Show("File path is missing!"); }
+            string excelFilePath = this.excelFilePathTextbox.Text;
+
+            if (excelFilePath == "") { MessageBox.Show("File path is missing!"); return; }
             System.Data.DataTable excelSheetDataTable;
             /*Prepare SQL Query*/
-            string queryString = currentQueryTextBox.Text;
+            string queryString = queryTextBox.Text;
             if (queryString == "") { queryString = "SELECT * FROM [" + this.excelFileSheetsComboBox.Text.Replace("'", "") + "$]"; /*+ "$B1:G3]"*/ }
             this.queryTextBox.Text = queryString;
 
@@ -88,9 +107,13 @@ namespace Report_generator
             /*Extract data into data grid on form */
             //if (excelSheetDataTable != null)
             //{ if (excelSheetDataTable.Rows.Count > 0) { this.excelQueryGridView.DataSource = excelSheetDataTable; queryTextBox.Text = queryString; } }
-            this.previewGridView.DataSource = excelSheetDataTable; currentQueryTextBox.Text = queryString;
+            this.previewGridView.DataSource = excelSheetDataTable; queryTextBox.Text = queryString;
             UpdateTotalRecords(excelSheetDataTable);
         }
+        //private void LoadQueryFromTextBoxToGridView(Control currentQueryTextBox, string excelFilePath)
+        //{
+
+        //}
         private void UpdateTotalRecords(DataTable dt = null)
         { if (dt != null) { this.totalRecordsLabel.Text = "Total records: " + dt.Rows.Count; } else { this.totalRecordsLabel.Text = ""; } }
         private void mainForm_Load(object sender, EventArgs e) { /*DemSwitchez(0);*/ }
@@ -151,46 +174,13 @@ namespace Report_generator
             //masterQueryExportToExcelButton.Visible = masterBool;
             masterQueryTextBox.Visible = masterBool;
 
-            excelFileBrowsePathButton.Visible = subBool;
-            excelFilePathTextbox.Visible = subBool;
-            excelFileSheetsComboBox.Visible = subBool;
-            sourceTypesGroupBox.Visible = subBool;
-        }
-        private void tableAddButton_Click(object sender, EventArgs e)
-        {
-            string newDataSourceName = Interaction.InputBox("Provide name of the new data source.", "Enter name"); //, "Default Text"
-            if(dataObjectCollecion.ContainsKey(newDataSourceName)) { MessageBox.Show("There is already a data object with that name!"); return; }
-            if (newDataSourceName == "") { MessageBox.Show("Incorrect name!"); return; }
-            //var newTable = new ADOX.Table();
-            
-            var newDataObject = new DataObject(newDataSourceName);
-            dataObjectCollecion.Add(newDataSourceName, newDataObject);
-
-            var newListViewItem = new ListViewItem(newDataSourceName);
-            dataObjectsListView.Items.Add(newListViewItem);
-            DemSwitchez(1,"Choose the source file and sheet");
-
-            dataObjectsListView.Items[dataObjectsListView.Items.Count - 1].Selected = true;
-            dataObjectsListView.Select();
-            EditMode();
-        }
-        private OleDbParameter GetOleDbParam(string name, int code)
-        {
-            OleDbParameter newParameter = new OleDbParameter();
-            newParameter.ParameterName = @"@" + name;// GetCleanParameterName(name);
-            switch(code)
-            {
-                case 0: newParameter.OleDbType = OleDbType.VarWChar;
-                break;
-                case 1: newParameter.OleDbType = OleDbType.Date;
-                break;
-                case 2: newParameter.OleDbType = OleDbType.Boolean;
-                break;
-                case 3: newParameter.OleDbType = OleDbType.Double;
-                break;
-            }
-            newParameter.Value = null;
-            return newParameter;
+            dataSourceGroupBox.Visible = subBool;
+            foreach (Control ctrl in dataSourceGroupBox.Controls) { ctrl.Visible = subBool; }
+            //excelFileBrowsePathButton.Visible = subBool;
+            //excelFileRefreshSheetsButton.Visible = subBool;
+            //excelFilePathTextbox.Visible = subBool;
+            //excelFileSheetsComboBox.Visible = subBool;
+            //sourceTypesGroupBox.Visible = subBool;
         }
         //private string GetCleanParameterName(string name) { return GetCleanColumnName(name).Replace(" ", ""); }
         private bool CreateTemporaryDatabase()
@@ -217,28 +207,11 @@ namespace Report_generator
                 {
                     /* Create empty table */
                     DataObject currentDataObject = dataObjectCollecion[key];
-                    var newTable = new ADOX.Table();
-                    newTable.Name = currentDataObject.Name;
                     DataTable currentDatatable = currentDataObject.DataTable;
 
-                    foreach (DataColumn col in currentDatatable.Columns)
-                    {
-                        ADOX.Column dbField = new Column();
-                        dbField.Name = GetCleanColumnName(col.ColumnName);
-                        dbField.Attributes = ColumnAttributesEnum.adColNullable;
-                        switch (col.DataType.ToString())
-                        {
-                            case "System.String":
-                            case "System.Char":
-                            case "System.Guid": dbField.Type = ADOX.DataTypeEnum.adVarWChar; break;//newTable.Columns.Append(cleanedColumnName, ADOX.DataTypeEnum.adVarWChar);
-                            case "System.DateTime":
-                            case "System.TimeSpan": dbField.Type = ADOX.DataTypeEnum.adDate; break;
-                            case "System.Boolean": dbField.Type = ADOX.DataTypeEnum.adBoolean; break;
-                            default: dbField.Type = ADOX.DataTypeEnum.adDouble; break;/*"System.Double", "System.Decimal","System.Byte","System.Int16","System.Int32","System.Int64","System.SByte","System.Single","System.UInt16","System.UInt32","System.UInt64" */
-                        }
-                        newTable.Columns.Append(dbField);
-                    }
+                    var newTable = JazzyFunctionsByPatryk.GetNewAdoxTable(currentDatatable, currentDataObject.Name);
                     storageDbCatalog.Tables.Append(newTable);
+
                     /* Create new connection - required because we have added a table */
                     con = new OleDbConnection(masterConnString);
 
@@ -247,22 +220,8 @@ namespace Report_generator
                     cmdDraft.CommandType = CommandType.Text; /* StoredProcedure is an alternative */
 
                     /* Create insert command with parameters */
-                    int paramIteration = 1;
-                    cmdDraft.CommandText = GetSqlInsertNQuery(currentDataObject.DataTable, currentDataObject.Name);
-                    foreach (DataColumn col in currentDatatable.Columns)
-                    {
-                        switch (col.DataType.ToString())
-                        {
-                            case "System.String":
-                            case "System.Char":
-                            case "System.Guid": cmdDraft.Parameters.Add(GetOleDbParam(paramIteration.ToString(), 0)); break;
-                            case "System.DateTime":
-                            case "System.TimeSpan": cmdDraft.Parameters.Add(GetOleDbParam(paramIteration.ToString(), 1)); break;
-                            case "System.Boolean": cmdDraft.Parameters.Add(GetOleDbParam(paramIteration.ToString(), 2)); break;
-                            default: cmdDraft.Parameters.Add(GetOleDbParam(paramIteration.ToString(), 3)); break;
-                        }
-                        paramIteration += 1;
-                    }
+                    cmdDraft.CommandText = JazzyFunctionsByPatryk.GetSqlInsertNonQuery(currentDataObject.DataTable, currentDataObject.Name);
+                    JazzyFunctionsByPatryk.SetOleDbCommandParameters(ref cmdDraft, currentDatatable);
 
                     /* Fill the new table with data */
                     OleDbCommand cmd;
@@ -270,7 +229,7 @@ namespace Report_generator
                     foreach (DataRow row in currentDatatable.Rows)
                     {
                         cmd = cmdDraft;
-                        paramIteration = 1;
+                        int paramIteration = 1;
                         foreach (DataColumn col in currentDatatable.Columns)
                         { cmd.Parameters[@"@" + paramIteration].Value = row[col.ColumnName]; paramIteration += 1; }//GetCleanParameterName(col.ColumnName)
                         cmd.ExecuteNonQuery(); 
@@ -292,26 +251,6 @@ namespace Report_generator
                     
         }
 
-        private string GetCleanColumnName(string oldName)
-        {
-            string[] illegals = { @"!", @"@", @"#", @"$", @"%", @"^", @"&", @"*", @"/", @"\" };//@"(", @")",
-            string newName = oldName;
-            foreach (string currentIllegal in illegals) { newName = newName.Replace(currentIllegal, " "); }
-            return newName;
-        }
-        private string GetSqlInsertNQuery(DataTable dt, string tableName)
-        {
-            string columnsNames = string.Empty;
-            string columnsValues = string.Empty;
-            int paramIteration = 1;
-            foreach (DataColumn col in dt.Columns)
-            { columnsNames = columnsNames + "[" + GetCleanColumnName(col.ColumnName) + "]" + ", "; columnsValues = columnsValues + @"@" + paramIteration + ", "; paramIteration += 1; }//GetCleanParameterName(col.ColumnName)
-            columnsNames = columnsNames.Remove(columnsNames.Length - 2);/*For removing final comma*/
-            columnsValues = columnsValues.Remove(columnsValues.Length - 2);
-
-            string fullReturnString = "INSERT INTO [" + tableName + "] (" + columnsNames + ") VALUES(" + columnsValues + ");";
-            return fullReturnString;
-        }
         private void SetStringAccessStorageDB()
         {
             accessStorageDbPath = currentFolder + "ExtractorStorage.accdb";
@@ -320,22 +259,7 @@ namespace Report_generator
         }
         private void dataObjectsListView_SelectedIndexChanged(object sender, EventArgs e) { PreviewMode(); }
         private void dataObjectsListView_MouseUp(object sender, MouseEventArgs e) /* Not working at the moment */
-        {
-            if (e.Button == MouseButtons.Right)
-            {
-                //if (listView1.FocusedItem.Bounds.Contains(e.Location) == true)
-                //{ contextMenuStrip1.Show(Cursor.Position); }
-                if (dataObjectsListView.SelectedItems.Count == 0) { return; }
-                string selectedName = dataObjectsListView.SelectedItems[0].SubItems[0].Text;
-                DataObject currentDataObject = dataObjectCollecion[selectedName];
-
-                string selectedDataSourceNewName = Interaction.InputBox("Provide the new name of the data source.", "Enter name", currentDataObject.Name); //, "Default Text"
-                if (dataObjectCollecion.ContainsKey(selectedDataSourceNewName)) { MessageBox.Show("There is already a data object with that name!"); return; }
-                if (selectedDataSourceNewName == "") { MessageBox.Show("Incorrect name!"); return; }
-
-                dataObjectCollecion[selectedName].Name = selectedDataSourceNewName;
-            }
-        }
+        { if (e.Button == MouseButtons.Right) { } }
         private void PreviewMode()
         {
             queryLoadButton.Enabled = false;
@@ -346,13 +270,18 @@ namespace Report_generator
             if (dataObjectsListView.SelectedItems.Count == 0) { return; }
             DataObject currentDataObject = dataObjectCollecion[dataObjectsListView.SelectedItems[0].SubItems[0].Text];
             previewGridView.DataSource = currentDataObject.DataTable;
-            queryTextBox.Text = currentDataObject.sqlQuery;
+            queryTextBox.Text = currentDataObject.SqlQuery;
+
 
             DemSwitchez(0);
 
             //excelFileBrowsePathButton.Visible = false;
-            excelFilePathTextbox.Text = "";
-            excelFileSheetsComboBox.DataSource = null; excelFileSheetsComboBox.Items.Clear();
+            //excelFilePathTextbox.Text = "";
+            //excelFileSheetsComboBox.DataSource = null; excelFileSheetsComboBox.Items.Clear();
+            excelFilePathTextbox.Text = currentDataObject.ExcelFilePath;
+            excelFileSheetsComboBox.Text = currentDataObject.ExcelFileSheet;
+            persStorageCheckBox.Checked = currentDataObject.PersStorage;
+
             UpdateTotalRecords(currentDataObject.DataTable);
         }
         private void tableDeleteButton_Click(object sender, EventArgs e)
@@ -382,21 +311,85 @@ namespace Report_generator
         {
             DataObject currentDataObject = dataObjectCollecion[dataObjectsListView.SelectedItems[0].SubItems[0].Text];
             currentDataObject.DataTable = (System.Data.DataTable)previewGridView.DataSource;
-            currentDataObject.sqlQuery = queryTextBox.Text;
+            currentDataObject.SqlQuery = queryTextBox.Text;
+            currentDataObject.ExcelFilePath=excelFilePathTextbox.Text;
+            currentDataObject.ExcelFileSheet=excelFileSheetsComboBox.Text;
+            currentDataObject.PersStorage = persStorageCheckBox.Checked;
             MessageBox.Show("Saved successfully.");
         }
-        private void radioButton2_CheckedChanged(object sender, EventArgs e) { excelFileBrowsePathButton.Visible = false; }
+        private void radioButton2_CheckedChanged(object sender, EventArgs e) { }//excelFileBrowsePathButton.Visible = false; }
         private void sourceExcelRadioButton_CheckedChanged(object sender, EventArgs e)
         {
-            excelFileBrowsePathButton.Visible = true;
-            excelFileSheetsComboBox.Visible = true;
+            //excelFileBrowsePathButton.Visible = true;
+            //excelFileSheetsComboBox.Visible = true;
         }
         private void exportFromGridViewButton_Click(object sender, EventArgs e)
         {
             if (this.previewGridView.DataSource == null) { return; }
             string savePath = JazzyFunctionsByPatryk.BrowseSavePath("xls");
-            try { JazzyFunctionsByPatryk.DataTableToCSVFile(this.previewGridView.DataSource as System.Data.DataTable, savePath); MessageBox.Show("Saved successfully."); }
-            catch (Exception ex) { MessageBox.Show(ex.Message); }
+            JazzyFunctionsByPatryk.DataTableToExcelFileWithInterop(this.previewGridView.DataSource as System.Data.DataTable, savePath);
+            //JazzyFunctionsByPatryk.DataTableToExcelFile(this.previewGridView.DataSource as System.Data.DataTable, savePath);  //try { }
+            //catch (Exception ex) { MessageBox.Show(ex.Message); }
         }
+        private void tableAddButton_Click(object sender, EventArgs e)
+        {
+            string newDataSourceName = JazzyFunctionsByPatryk.SummonInputBox("Provide name of the new data source.", "Enter name");
+
+            if (!(CheckDataSourceName(ref newDataSourceName))) { return; }
+            //var newTable = new ADOX.Table();
+
+            var newDataObject = new DataObject(newDataSourceName);
+            dataObjectCollecion.Add(newDataSourceName, newDataObject);
+
+            string[] nameArray = new string[] { newDataSourceName };
+            AddDataObjectNameToListView(nameArray);
+
+            DemSwitchez(1, "Choose the source file and sheet");
+            EditMode();
+        }
+        private void AddDataObjectNameToListView(string[] newDataSourceNames)
+        {
+            //var newListViewItem = new ListViewItem(newDataSourceName);
+            ListViewItem newItem;
+            foreach (string currentItem in newDataSourceNames) { dataObjectsListView.Items.Add(currentItem); }
+
+            dataObjectsListView.Items[dataObjectsListView.Items.Count - 1].Selected = true;
+            dataObjectsListView.Select();
+        }
+        private void loadPresetsButton_Click(object sender, EventArgs e)
+        {
+            string masterQuery = this.masterQueryTextBox.Text;
+            JazzyFunctionsByPatryk.ReadSettings(ref masterQuery, ref dataObjectCollecion);
+            this.masterQueryTextBox.Text = masterQuery;
+            string[] keys = dataObjectCollecion.Keys.ToArray();
+            AddDataObjectNameToListView(keys);
+            //foreach (KeyValuePair<string, DataObject> entry in dataObjectCollecion) { AddDataObjectNameToListView(entry.Key); }//entry.Key; entry.Value
+        }
+        private void tableRenameButton_Click(object sender, EventArgs e)
+        {
+            if (dataObjectsListView.SelectedItems.Count == 0) { return; }
+            string selectedName = dataObjectsListView.SelectedItems[0].SubItems[0].Text;
+            DataObject currentDataObject = dataObjectCollecion[selectedName];
+
+            string selectedDataSourceNewName = JazzyFunctionsByPatryk.SummonInputBox("Provide the new name of the data source.", "Enter name", currentDataObject.Name);
+
+            if (!(CheckDataSourceName(ref selectedDataSourceNewName))) { return; }
+
+            dataObjectCollecion[selectedName].Name = selectedDataSourceNewName;
+            dataObjectsListView.SelectedItems[0].SubItems[0].Text = selectedDataSourceNewName;
+        }
+        private bool CheckDataSourceName(ref string name)
+        {
+            if (name == "") { MessageBox.Show("Blank name!"); return false; }
+            string correctedName = JazzyFunctionsByPatryk.GetCleanAccessObjectName(name, true);
+            if (name != correctedName) { MessageBox.Show("The name has incorrect characters and has been corrected to: " + correctedName); name = correctedName; }
+            if (dataObjectCollecion.ContainsKey(name)) { MessageBox.Show("There is already a data object with that name!"); return false; }
+            return true;
+        }
+        //private void excelFileRefreshSheetsButton_Click(object sender, EventArgs e) { RefreshExcelSheets(this.excelFilePathTextbox.Text); }
+
+        //private void button1_Click(object sender, EventArgs e) { JazzyFunctionsByPatryk.WriteSettings(); }
+        private void savePresetsButton_Click(object sender, EventArgs e)
+        { JazzyFunctionsByPatryk.WriteSettings(this.masterQueryTextBox.Text, dataObjectCollecion); }
     }
 }
