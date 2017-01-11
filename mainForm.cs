@@ -19,31 +19,47 @@ namespace Report_generator
     public partial class mainForm : Form
     {
         public const string appVersion = "2.0.0.0 BETA";
-        public ADOX.Catalog storageDbCatalog;
+        //public ADOX.Catalog storageDbCatalog;
         public Dictionary<string, DataObject> dataObjectCollecion;
         public string currentFolder;
-        public string accessStorageDbPath;
         public OleDbCommand cmdDraft;
         public string masterConnString;
+        public string accessStorageDbPath;
         //public string masterQuery;
+        //public List<string> tempDBList;
 
         public mainForm() 
         { 
             InitializeComponent();
+            //ResetSettings();
             flexiLabel.Text = "Welcome to the Extractor v " + appVersion;
-            this.Text = "The Extractor v " + appVersion;
+            this.Text = "The Extractor v " + appVersion; /* App label */
             dataObjectCollecion = new Dictionary<string, DataObject>();
             currentFolder = System.IO.Path.GetDirectoryName(Application.ExecutablePath) + @"\";
+            accessStorageDbPath = currentFolder + "ExtractorStorage.accdb";
+            masterConnString = JazzyFunctionsByPatryk.GetConnectionString(accessStorageDbPath);
             CheckNecessaryFiles();
+            ClearTempDB();
         }
+
+        //private void ResetSettings()
+        //{
+        //    flexiLabel.Text = "Welcome to the Extractor v " + appVersion;
+        //    this.Text = "The Extractor v " + appVersion;
+        //    dataObjectCollecion = new Dictionary<string, DataObject>();
+        //    storageDbCatalog = null;
+        //    string accessStorageDbPath = string.Empty;
+        //    public OleDbCommand cmdDraft;
+        //    public string masterConnString;
+        //}
         private void CheckNecessaryFiles()
         {
             string adoDbLibrary = currentFolder + "adodb.dll";
             string vbLibrary = currentFolder + "Microsoft.VisualBasic.dll";
-            string[] criticalFiles = { adoDbLibrary, vbLibrary };
+            string[] criticalFiles = { adoDbLibrary, vbLibrary, accessStorageDbPath };
 
             foreach (string filePath in criticalFiles)
-            { if (!(System.IO.File.Exists(filePath))) { MessageBox.Show("Critical file was not found. The application will exit." + Environment.NewLine + accessStorageDbPath); Environment.Exit(1); } }
+            { if (!(System.IO.File.Exists(filePath))) { MessageBox.Show("Critical file was not found. The application will exit." + Environment.NewLine + filePath); Environment.Exit(1); } }
         }
         private void excelFilePathButton_Click(object sender, EventArgs e)
         {
@@ -63,7 +79,7 @@ namespace Report_generator
         }
         private void RefreshExcelSheets(string workbookPath)
         {
-            var excelFileSheetsList = JazzyFunctionsByPatryk.ListSheetInExcel(workbookPath);
+            var excelFileSheetsList = JazzyFunctionsByPatryk.GetOleDbSchema(workbookPath);
             if (excelFileSheetsList == null) { MessageBox.Show("Could not load the sheets. Is the Excel file correct?"); return; }
             this.excelFileSheetsComboBox.DataSource = excelFileSheetsList;
         }
@@ -120,37 +136,59 @@ namespace Report_generator
         private void quitButton_Click(object sender, EventArgs e)
         {
             /*Terminate the storage database connection and exit*/
-            TerminateDB(true);
+            //TerminateDB(true);
+            //var con = new OleDbConnection(masterConnString);
+            //tempDBConnection.ConnectionString = masterConnString;
+
+            ClearTempDB();
+
             Environment.Exit(1);
         }
-        private void TerminateDB(bool question = false)
-        {
-            if (System.IO.File.Exists(accessStorageDbPath))
-            {
-                //ADODB.Connection con = null;
-                try
-                {
-                    var con = storageDbCatalog.ActiveConnection as OleDbConnection;//ADODB.Connection
-                    if (con != null) con.Close();
-                }
-                catch (Exception e) { }
 
-                //System.Runtime.InteropServices.Marshal.FinalReleaseComObject(con);//storageDbCatalog.ActiveConnection
-                System.Runtime.InteropServices.Marshal.FinalReleaseComObject(storageDbCatalog);
-                DialogResult dialogResult = DialogResult.Yes;
-                if (question) { dialogResult = MessageBox.Show("Would you like to delete the temporary database?" + Environment.NewLine + accessStorageDbPath, "", MessageBoxButtons.YesNo); }
-                
-                string accessStorageLinkPath = accessStorageDbPath.Replace(".accdb", ".laccdb");
-                //var nl = Environment.NewLine;
-                string separator = Environment.NewLine + "---" + Environment.NewLine;
-                if (dialogResult == DialogResult.Yes) 
-                { 
-                    try { System.IO.File.Delete(accessStorageDbPath); }
-                    catch (Exception e)
-                    { MessageBox.Show("Could not delete the temporary database. Please do it manually:" + separator + accessStorageDbPath + separator + accessStorageLinkPath); }
-                }
-            }
+        private void ClearTempDB()
+        {
+            var storageDbCatalog = new ADOX.Catalog();
+            var tempDBConnection = new ADODB.Connection();
+            tempDBConnection.Open(masterConnString);
+            storageDbCatalog.ActiveConnection = tempDBConnection;
+
+            List<string> tableNames = JazzyFunctionsByPatryk.GetOleDbSchema(accessStorageDbPath);
+            foreach (string currentTableName in tableNames)
+            { storageDbCatalog.Tables.Delete(currentTableName); }//string currentTableName in storageDbCatalog.Tables.
+            tempDBConnection.Close();
         }
+        //private void TerminateDB(bool question = false)
+        //{
+
+        //    //if (System.IO.File.Exists(accessStorageDbPath))
+        //    //{
+        //        //ADODB.Connection con = null;
+        //        //try
+        //        //{
+        //        //    var con = storageDbCatalog.ActiveConnection as OleDbConnection;//ADODB.Connection
+        //        //    if (con != null) {con.Dispose();}//con.Close(); con = null;
+        //        //}
+        //        //catch (Exception e) { }
+
+        //        //System.Runtime.InteropServices.Marshal.FinalReleaseComObject(con);//storageDbCatalog.ActiveConnection
+        //        //System.Runtime.InteropServices.Marshal.FinalReleaseComObject(storageDbCatalog);
+        //        DialogResult dialogResult = DialogResult.Yes;
+        //        if (question) { dialogResult = MessageBox.Show("Would you like to delete the temporary databases?", "", MessageBoxButtons.YesNo); }// + Environment.NewLine + accessStorageDbPath, "", MessageBoxButtons.YesNo); }
+                
+        //        //string accessStorageLinkPath = accessStorageDbPath.Replace(".accdb", ".laccdb");
+        //        //var nl = Environment.NewLine;
+        //        //string separator = Environment.NewLine + "---" + Environment.NewLine;
+        //        if (dialogResult == DialogResult.Yes) 
+        //        {
+        //            foreach (string fileDB in tempDBList)
+        //            {
+        //                try { System.IO.File.Delete(fileDB); }
+        //                catch (Exception e) { MessageBox.Show("Could not delete the temporary databases. Please do it manually.");} 
+        //                //:" + separator + accessStorageDbPath + separator + accessStorageLinkPath); }
+        //            }
+        //        }
+        //    //}
+        //}
         private void masterButton_Click(object sender, EventArgs e) { DemSwitchez(2,"Master report"); }
         private void DemSwitchez(int switchCode, string flexiLabelText = "")
         {
@@ -183,24 +221,66 @@ namespace Report_generator
             //sourceTypesGroupBox.Visible = subBool;
         }
         //private string GetCleanParameterName(string name) { return GetCleanColumnName(name).Replace(" ", ""); }
-        private bool CreateTemporaryDatabase()
-        {
-            try
-            {          
-                storageDbCatalog = new Catalog();
-                SetStringAccessStorageDB();
-                masterConnString = JazzyFunctionsByPatryk.GetConnectionString(accessStorageDbPath);
-                storageDbCatalog.Create(masterConnString);
-                return true;
-            }
-            catch (Exception e) { MessageBox.Show(e.Message.ToString()); return false; }
-        }
+        //private bool ConnectToTemporaryDatabase()
+        //{
+        //    try
+        //    {
+        //        string accessStorageDbPath = GetStringAccessStorageDB();
+        //        masterConnString = JazzyFunctionsByPatryk.GetConnectionString(accessStorageDbPath);
+
+                //var storageDbCatalog = new ADOX.Catalog();
+                //storageDbCatalog.Create(masterConnString);
+
+                //System.Runtime.InteropServices.Marshal.FinalReleaseComObject(storageDbCatalog);
+                //var con = storageDbCatalog.ActiveConnection as OleDbConnection;//ADODB.Connection
+                //con.Dispose();
+                //storageDbCatalog = null;
+
+                //tempDBList.Add(accessStorageDbPath);
+                //try
+                //{
+                //    var con = storageDbCatalog.ActiveConnection as OleDbConnection;//ADODB.Connection
+                //    con.Dispose();
+                //}
+                //catch (Exception e) { MessageBox.Show(e.Message); return false; }
+
+        //        return true;
+        //    }
+        //    catch (Exception e) { MessageBox.Show(e.Message.ToString()); return false; }
+        //}
+        //private Catalog OpenDatabase()
+        //{
+        //    Catalog catalog = new Catalog();
+        //    var connection = new ADODB.Connection();
+
+        //    try
+        //    {
+        //        connection.Open(_ConnectionString);
+        //        catalog.ActiveConnection = connection;
+        //    }
+        //    catch (Exception)
+        //    {
+        //        catalog.Create(_ConnectionString);
+        //    }
+        //    return catalog;
+        //}
         private void masterQueryLoadButton_Click(object sender, EventArgs e)
         {
-            if(!(CreateTemporaryDatabase())) {return;}
+            //if(!(ConnectToTemporaryDatabase())) {return;}
+            masterConnString = JazzyFunctionsByPatryk.GetConnectionString(accessStorageDbPath);
+
+            //bool askIfDeleteDB = false;
+            //string lastTempDB = tempDBList[tempDBList.Count - 1];
+            var storageDbCatalog = new ADOX.Catalog();
+            var con = new OleDbConnection(masterConnString);
+            var tempDBConnection = new ADODB.Connection();
+            //tempDBConnection.ConnectionString = masterConnString;
+            tempDBConnection.Open(masterConnString);
+            storageDbCatalog.ActiveConnection = tempDBConnection;
+            //storageDbCatalog.Create(masterConnString);
 
             /* Create tables it temp DB with data */
-            OleDbConnection con = new OleDbConnection();
+            
             try
             {
                 foreach (var key in dataObjectCollecion.Keys)
@@ -244,19 +324,23 @@ namespace Report_generator
                 { 
                     var masterDataTable = JazzyFunctionsByPatryk.GetDataTable(masterConnString, masterQuery);
                     this.previewGridView.DataSource = masterDataTable;
+                    UpdateTotalRecords(masterDataTable);
                 }
+                //else { askIfDeleteDB = true; }
             }
             catch (Exception ex) { MessageBox.Show(ex.Message, ex.Source); }
-            finally { TerminateDB(true); }//if (con != null)  con.Close();
-                    
+            finally { con.Dispose(); tempDBConnection.Close() ; storageDbCatalog = null; }//if (con != null)  con.Close(); con.Close(); con = null; };
+            //TerminateDB(askIfDeleteDB);     
         }
 
-        private void SetStringAccessStorageDB()
-        {
-            accessStorageDbPath = currentFolder + "ExtractorStorage.accdb";
-            int i = 1;
-            do { accessStorageDbPath = currentFolder + "(" + i + ")" + "ExtractorStorage.accdb"; i += 1; } while (System.IO.File.Exists(accessStorageDbPath));
-        }
+        //private string GetStringAccessStorageDB()
+        //{
+        //    return 
+        //    //string accessStorageDbPath = currentFolder + "ExtractorStorage.accdb";
+        //    //int i = 1;
+        //    //do { accessStorageDbPath = currentFolder + "(" + i + ")" + "ExtractorStorage.accdb"; i += 1; } while (System.IO.File.Exists(accessStorageDbPath));
+        //    //return accessStorageDbPath;
+        //}
         private void dataObjectsListView_SelectedIndexChanged(object sender, EventArgs e) { PreviewMode(); }
         private void dataObjectsListView_MouseUp(object sender, MouseEventArgs e) /* Not working at the moment */
         { if (e.Button == MouseButtons.Right) { } }
@@ -271,7 +355,6 @@ namespace Report_generator
             DataObject currentDataObject = dataObjectCollecion[dataObjectsListView.SelectedItems[0].SubItems[0].Text];
             previewGridView.DataSource = currentDataObject.DataTable;
             queryTextBox.Text = currentDataObject.SqlQuery;
-
 
             DemSwitchez(0);
 
@@ -327,6 +410,7 @@ namespace Report_generator
         {
             if (this.previewGridView.DataSource == null) { return; }
             string savePath = JazzyFunctionsByPatryk.BrowseSavePath("xls");
+            if (savePath == "") { return; }
             JazzyFunctionsByPatryk.DataTableToExcelFileWithInterop(this.previewGridView.DataSource as System.Data.DataTable, savePath);
             //JazzyFunctionsByPatryk.DataTableToExcelFile(this.previewGridView.DataSource as System.Data.DataTable, savePath);  //try { }
             //catch (Exception ex) { MessageBox.Show(ex.Message); }
@@ -350,7 +434,7 @@ namespace Report_generator
         private void AddDataObjectNameToListView(string[] newDataSourceNames)
         {
             //var newListViewItem = new ListViewItem(newDataSourceName);
-            ListViewItem newItem;
+            //ListViewItem newItem;
             foreach (string currentItem in newDataSourceNames) { dataObjectsListView.Items.Add(currentItem); }
 
             dataObjectsListView.Items[dataObjectsListView.Items.Count - 1].Selected = true;
@@ -361,6 +445,8 @@ namespace Report_generator
             string masterQuery = this.masterQueryTextBox.Text;
             JazzyFunctionsByPatryk.ReadSettings(ref masterQuery, ref dataObjectCollecion);
             this.masterQueryTextBox.Text = masterQuery;
+
+            this.dataObjectsListView.Items.Clear();
             string[] keys = dataObjectCollecion.Keys.ToArray();
             AddDataObjectNameToListView(keys);
             //foreach (KeyValuePair<string, DataObject> entry in dataObjectCollecion) { AddDataObjectNameToListView(entry.Key); }//entry.Key; entry.Value
@@ -391,5 +477,18 @@ namespace Report_generator
         //private void button1_Click(object sender, EventArgs e) { JazzyFunctionsByPatryk.WriteSettings(); }
         private void savePresetsButton_Click(object sender, EventArgs e)
         { JazzyFunctionsByPatryk.WriteSettings(this.masterQueryTextBox.Text, dataObjectCollecion); }
+
+        private void previewGridView_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+
+        //private void resetButton_Click(object sender, EventArgs e)
+        //{
+        //    this.excelFilePathTextbox;
+        //    this.excelFileSheetsComboBox;
+        //    this.queryTextBox;
+        //    this.dataObjectsListView;
+        //}
     }
 }

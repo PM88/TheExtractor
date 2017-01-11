@@ -102,6 +102,7 @@
             this.previewGridView.Name = "previewGridView";
             this.previewGridView.Size = new System.Drawing.Size(928, 310);
             this.previewGridView.TabIndex = 21;
+            this.previewGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.previewGridView_CellContentClick);
             // 
             // queryLoadButton
             // 
@@ -168,7 +169,7 @@
             // 
             this.masterButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(192)))), ((int)(((byte)(255)))));
             this.masterButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.masterButton.Location = new System.Drawing.Point(42, 16);
+            this.masterButton.Location = new System.Drawing.Point(42, 24);
             this.masterButton.Name = "masterButton";
             this.masterButton.Size = new System.Drawing.Size(195, 35);
             this.masterButton.TabIndex = 32;
@@ -180,7 +181,7 @@
             // 
             this.quitButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(128)))));
             this.quitButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.quitButton.Location = new System.Drawing.Point(42, 66);
+            this.quitButton.Location = new System.Drawing.Point(42, 76);
             this.quitButton.Name = "quitButton";
             this.quitButton.Size = new System.Drawing.Size(195, 35);
             this.quitButton.TabIndex = 33;

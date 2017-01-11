@@ -28,10 +28,10 @@ namespace Report_generator
             string fileName = JazzyFunctionsByPatryk.BrowseSavePath("txt");
             StreamWriter sw = new StreamWriter(fileName, false); /* True stands for appending (not overwrt) */
             //sw.WriteLine("*******");
-            if (masterQuery != "") { sw.WriteLine("Master_Query = " + masterQuery); }
+            if (masterQuery != "") { sw.WriteLine("Master_Query = " + masterQuery.Replace(Environment.NewLine, " ")); }
             foreach (DataObject currentDO in dataObjectCollecion.Values)
             {
-                sw.WriteLine("Data_Object" + separatorDO + currentDO.Name + separatorDO + "SQL_Query = " + currentDO.SqlQuery);
+                sw.WriteLine("Data_Object" + separatorDO + currentDO.Name + separatorDO + "SQL_Query = " + currentDO.SqlQuery.Replace(Environment.NewLine, " "));
                 if(currentDO.PersStorage)
                 {
                     sw.WriteLine("Data_Object" + separatorDO + currentDO.Name + separatorDO + "Source_path = " + currentDO.ExcelFilePath);
@@ -43,6 +43,7 @@ namespace Report_generator
             //sw.WriteLine(tag);
             //sw.WriteLine(sqlQuery);
             sw.Close();
+            MessageBox.Show("Successfully saved the presets.");
         }
         public static void ReadSettings(ref string masterQuery, ref Dictionary<string, DataObject> dataObjectCollecion)
         {
@@ -61,41 +62,45 @@ namespace Report_generator
             string dataObjectName;
             DataObject currentDataObject;
             
-
-            while ((line = sr.ReadLine()) != null)
-            {
-                presetType = line.Substring(0, line.IndexOf(separator, 0));
-                prefixLength = separator.Length + line.IndexOf(separator, 0);
-                presetValue = line.Substring(prefixLength, line.Length - prefixLength);
-                switch (presetType)
+            try
+            { 
+                while ((line = sr.ReadLine()) != null)
                 {
-                    case "Master_Query": masterQuery = presetValue; break;
-                    default: if(presetType.Contains(separatorDO))
-                        {
-                            presetTypeArray = presetType.Split('!');
-                            dataObjectName = presetTypeArray[1];
-                            presetSubType = presetTypeArray[2];
-                            //dataObjectName = presetType.Substring(presetType.IndexOf(separatorDO, 0), );
-                            if (!(dataObjectCollecion.ContainsKey(dataObjectName)))
-                            { dataObjectCollecion.Add(dataObjectName, new DataObject(dataObjectName)); }
-
-                            currentDataObject = dataObjectCollecion[dataObjectName];
-                            switch(presetSubType)
+                    presetType = line.Substring(0, line.IndexOf(separator, 0));
+                    prefixLength = separator.Length + line.IndexOf(separator, 0);
+                    presetValue = line.Substring(prefixLength, line.Length - prefixLength);
+                    switch (presetType)
+                    {
+                        case "Master_Query": masterQuery = presetValue; break;
+                        default: if(presetType.Contains(separatorDO))
                             {
-                                case "SQL_Query": currentDataObject.SqlQuery = presetValue; break;
-                                case "Source_path": 
-                                    currentDataObject.ExcelFilePath = presetValue;
-                                    currentDataObject.PersStorage = true;
-                                    break;
-                                case "Source_table": 
-                                    currentDataObject.ExcelFileSheet = presetValue;
-                                    currentDataObject.PersStorage = true;
-                                    break;
-                            }
-                        } break;
+                                presetTypeArray = presetType.Split('!');
+                                dataObjectName = presetTypeArray[1];
+                                presetSubType = presetTypeArray[2];
+                                //dataObjectName = presetType.Substring(presetType.IndexOf(separatorDO, 0), );
+                                if (!(dataObjectCollecion.ContainsKey(dataObjectName)))
+                                { dataObjectCollecion.Add(dataObjectName, new DataObject(dataObjectName)); }
+
+                                currentDataObject = dataObjectCollecion[dataObjectName];
+                                switch(presetSubType)
+                                {
+                                    case "SQL_Query": currentDataObject.SqlQuery = presetValue; break;
+                                    case "Source_path": 
+                                        currentDataObject.ExcelFilePath = presetValue;
+                                        currentDataObject.PersStorage = true;
+                                        break;
+                                    case "Source_table": 
+                                        currentDataObject.ExcelFileSheet = presetValue;
+                                        currentDataObject.PersStorage = true;
+                                        break;
+                                }
+                            } break;
+                    }
                 }
+                sr.Close();
+                MessageBox.Show("Successfully loaded the presets.");
             }
-            sr.Close();
+            catch { MessageBox.Show("The presets file is corrupted! Please restart the application."); return; }
         }
         public static int IndexOfNth(this string input, string value, int startIndex, int nth)
         {
@@ -149,7 +154,7 @@ namespace Report_generator
             //string excelFileConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0; Data Source=" + excelFilePath
             //    + "; Extended Properties=" + connectionProperties;
         }
-        public static List<string> ListSheetInExcel(string excelFilePath)
+        public static List<string> GetOleDbSchema(string excelFilePath)
         {
             var listSheet = new List<string>();
             string connectionString = GetConnectionString(excelFilePath);
@@ -157,10 +162,12 @@ namespace Report_generator
             {
                 conn.Open();
                 System.Data.DataTable dtSheet = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, null);
-                foreach (DataRow drSheet in dtSheet.Rows)
+                foreach (DataRow row in dtSheet.Rows)
                 {
-                    if (drSheet["TABLE_NAME"].ToString().Contains("$"))//checks whether row contains '_xlnm#_FilterDatabase' or sheet name(i.e. sheet name always ends with $ sign)
-                    { listSheet.Add(drSheet["TABLE_NAME"].ToString().Replace("$", "")); }
+                    if (row["TABLE_NAME"].ToString().Contains("$")) /*checks whether row contains '_xlnm#_FilterDatabase' or sheet name(i.e. sheet name always ends with $ sign)*/
+                    { listSheet.Add(row["TABLE_NAME"].ToString().Replace("$", "")); }
+                    else
+                    { if (row["TABLE_TYPE"].ToString() == "TABLE") { listSheet.Add(row["TABLE_NAME"].ToString()); } }
                 }
                 conn.Close();
             }
@@ -176,7 +183,7 @@ namespace Report_generator
 
             if (sfd.ShowDialog() == DialogResult.OK) { return sfd.FileName; } else { return ""; }
         }
-        public static string BrowseFilePath(string browseFilter = "") //string extension = "", 
+        public static string BrowseFilePath(string browseFilter = "") //string extension = "",
         {
             string filter;
             if (browseFilter == "") { filter = "All files (*.*)|*.*"; } else { filter = browseFilter; }// "(*." + extension + ")|*." + extension; }
@@ -290,6 +297,22 @@ namespace Report_generator
             newParameter.Value = null;
             return newParameter;
         }
+        //private static List<string> GetOleDbSchema(string sourcePath)
+        //{
+        //    String connect = "Provider=Microsoft.JET.OLEDB.4.0;data source=.\\Employee.mdb";
+        //    OleDbConnection con = new OleDbConnection(connect);
+        //    con.Open();
+        //    Console.WriteLine("Made the connection to the database");
+
+        //    Console.WriteLine("Information for each table contains:");
+        //    DataTable tables = con.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, new object[] { null, null, null, "TABLE" });
+
+        //    Console.WriteLine("The tables are:");
+        //    foreach (DataRow row in tables.Rows)
+        //        Console.Write("  {0}", row[2]);
+
+        //    con.Close();
+        //}
         public static string SummonInputBox(string prompt, string title = "", string defaultResponse="") { return Interaction.InputBox(prompt, title, defaultResponse); }
         public static void DataTableToExcelFile(System.Data.DataTable dt, string targetPath) /* Experimental, breaks at connection open due to unrecognized format */
         {
@@ -349,35 +372,40 @@ namespace Report_generator
             }
             return columnNameAndType;
         }
-        public static void DataTableToExcelFileWithInterop(System.Data.DataTable dt, string targetPath, string sheetName = "Sheet1")
+        public static void DataTableToExcelFileWithInterop(System.Data.DataTable dt, string targetPath)//, string sheetName = "Sheet1"
         {
+            if (dt == null) { MessageBox.Show("No data to export!"); return; }
             var dialogResult = MessageBox.Show("Excel must be closed lest you lose your work progress. Continue?" , "", MessageBoxButtons.YesNo);
             if (dialogResult == DialogResult.No) { return; }
 
-            var excelApp = new Microsoft.Office.Interop.Excel.Application();
-            Microsoft.Office.Interop.Excel.Workbook excelWorkBook = null;
-            if (!File.Exists(targetPath))
-            {
-                excelWorkBook = excelApp.Workbooks.Add();
-                excelWorkBook.SaveAs(targetPath);
+            try
+            { 
+                var excelApp = new Microsoft.Office.Interop.Excel.Application();
+                Microsoft.Office.Interop.Excel.Workbook excelWorkBook = null;
+                if (!File.Exists(targetPath))
+                {
+                    excelWorkBook = excelApp.Workbooks.Add();
+                    excelWorkBook.SaveAs(targetPath,XlFileFormat.xlWorkbookNormal);
+                }
+                else { excelWorkBook = excelApp.Workbooks.Open(targetPath); }
+
+                Microsoft.Office.Interop.Excel.Worksheet excelWorkSheet = excelWorkBook.Sheets[1];//(Worksheet)excelWorkBook.Sheets.Add();
+
+                //excelWorkSheet.Name = sheetName; //if (sheetName != "") { }
+
+                for (int i = 1; i < dt.Columns.Count + 1; i++)
+                { excelWorkSheet.Cells[1, i] = dt.Columns[i - 1].ColumnName; }
+
+                for (int j = 0; j < dt.Rows.Count; j++)
+                {
+                    for (int k = 0; k < dt.Columns.Count; k++)
+                    { excelWorkSheet.Cells[j + 2, k + 1] = dt.Rows[j].ItemArray[k].ToString(); }
+                }
+                excelWorkBook.Save();
+                MessageBox.Show("Saved successfully to: " + Environment.NewLine + targetPath);
             }
-            else { excelWorkBook = excelApp.Workbooks.Open(targetPath); }
-
-            Microsoft.Office.Interop.Excel.Worksheet excelWorkSheet = (Worksheet)excelWorkBook.Sheets.Add();
-
-            excelWorkSheet.Name = sheetName; //if (sheetName != "") { }
-
-            for (int i = 1; i < dt.Columns.Count + 1; i++)
-            { excelWorkSheet.Cells[1, i] = dt.Columns[i - 1].ColumnName; }
-
-            for (int j = 0; j < dt.Rows.Count; j++)
-            {
-                for (int k = 0; k < dt.Columns.Count; k++)
-                { excelWorkSheet.Cells[j + 2, k + 1] = dt.Rows[j].ItemArray[k].ToString(); }
-            }
-            excelWorkBook.Save();
-            KillTask("EXCEL");
-            MessageBox.Show("Saved successfully to: " + Environment.NewLine + targetPath);
+            catch (Exception e) { MessageBox.Show(e.Message.ToString()); }
+            finally { KillTask("EXCEL"); }
         }
         //### FUNCTIONS MORGUE ####
         #region Local vars
