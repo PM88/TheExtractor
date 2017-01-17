@@ -14,6 +14,7 @@ namespace Report_generator
         public string ExcelFilePath;
         public string ExcelFileSheet;
         public bool PersStorage;
+        public string Description;
         //public string sourceAddress;
         //public string sourceExcelSheet;
 
@@ -23,7 +24,7 @@ namespace Report_generator
         public void SetQueryAndDataTable(string sql, string excelFilePath)
         {
             SqlQuery = sql;
-            DataTable = JazzyFunctionsByPatryk.GetDataTable(JazzyFunctionsByPatryk.GetConnectionString(excelFilePath), sql);
+            DataTable = FunRepository.GetDataTable(FunRepository.GetConnectionString(excelFilePath), sql);
         }
     }
 }

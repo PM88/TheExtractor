@@ -30,7 +30,6 @@
         {
             this.flexiLabel = new System.Windows.Forms.Label();
             this.queryTextBox = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
             this.previewGridView = new System.Windows.Forms.DataGridView();
             this.queryLoadButton = new System.Windows.Forms.Button();
             this.dataObjectsListView = new System.Windows.Forms.ListView();
@@ -51,18 +50,26 @@
             this.exportFromGridViewButton = new System.Windows.Forms.Button();
             this.tableRenameButton = new System.Windows.Forms.Button();
             this.dataSourceGroupBox = new System.Windows.Forms.GroupBox();
+            this.autoRunCheckBox = new System.Windows.Forms.CheckBox();
             this.sourceTypesGroupBox = new System.Windows.Forms.GroupBox();
             this.sourceSharePointRadioButton = new System.Windows.Forms.RadioButton();
             this.sourceExcelRadioButton = new System.Windows.Forms.RadioButton();
             this.persStorageCheckBox = new System.Windows.Forms.CheckBox();
-            this.excelFileRefreshSheetsButton = new System.Windows.Forms.Button();
             this.excelFileSheetsComboBox = new System.Windows.Forms.ComboBox();
             this.excelFileBrowsePathButton = new System.Windows.Forms.Button();
             this.excelFilePathTextbox = new System.Windows.Forms.TextBox();
             this.savePresetsButton = new System.Windows.Forms.Button();
+            this.descriptionDOTextBox = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.dataObjectGroupBox = new System.Windows.Forms.GroupBox();
+            this.currentStatusLabel = new System.Windows.Forms.Label();
+            this.statusLabel = new System.Windows.Forms.Label();
+            this.resetButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.previewGridView)).BeginInit();
             this.dataSourceGroupBox.SuspendLayout();
             this.sourceTypesGroupBox.SuspendLayout();
+            this.dataObjectGroupBox.SuspendLayout();
             this.SuspendLayout();
             // 
             // flexiLabel
@@ -78,22 +85,11 @@
             // queryTextBox
             // 
             this.queryTextBox.BackColor = System.Drawing.SystemColors.Window;
-            this.queryTextBox.Enabled = false;
-            this.queryTextBox.Location = new System.Drawing.Point(386, 175);
+            this.queryTextBox.Location = new System.Drawing.Point(87, 30);
             this.queryTextBox.Multiline = true;
             this.queryTextBox.Name = "queryTextBox";
-            this.queryTextBox.Size = new System.Drawing.Size(554, 96);
+            this.queryTextBox.Size = new System.Drawing.Size(554, 45);
             this.queryTextBox.TabIndex = 23;
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(300, 145);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(177, 25);
-            this.label1.TabIndex = 22;
-            this.label1.Text = "Data source view";
             // 
             // previewGridView
             // 
@@ -106,8 +102,7 @@
             // 
             // queryLoadButton
             // 
-            this.queryLoadButton.Enabled = false;
-            this.queryLoadButton.Location = new System.Drawing.Point(305, 173);
+            this.queryLoadButton.Location = new System.Drawing.Point(6, 19);
             this.queryLoadButton.Name = "queryLoadButton";
             this.queryLoadButton.Size = new System.Drawing.Size(75, 23);
             this.queryLoadButton.TabIndex = 18;
@@ -169,7 +164,7 @@
             // 
             this.masterButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(192)))), ((int)(((byte)(255)))));
             this.masterButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.masterButton.Location = new System.Drawing.Point(42, 24);
+            this.masterButton.Location = new System.Drawing.Point(42, 7);
             this.masterButton.Name = "masterButton";
             this.masterButton.Size = new System.Drawing.Size(195, 35);
             this.masterButton.TabIndex = 32;
@@ -181,7 +176,7 @@
             // 
             this.quitButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(128)))));
             this.quitButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.quitButton.Location = new System.Drawing.Point(42, 76);
+            this.quitButton.Location = new System.Drawing.Point(42, 89);
             this.quitButton.Name = "quitButton";
             this.quitButton.Size = new System.Drawing.Size(195, 35);
             this.quitButton.TabIndex = 33;
@@ -210,9 +205,9 @@
             // 
             this.masterQueryLoadButton.Location = new System.Drawing.Point(623, 13);
             this.masterQueryLoadButton.Name = "masterQueryLoadButton";
-            this.masterQueryLoadButton.Size = new System.Drawing.Size(75, 28);
+            this.masterQueryLoadButton.Size = new System.Drawing.Size(132, 28);
             this.masterQueryLoadButton.TabIndex = 35;
-            this.masterQueryLoadButton.Text = "Load query";
+            this.masterQueryLoadButton.Text = "Load master query";
             this.masterQueryLoadButton.UseVisualStyleBackColor = true;
             this.masterQueryLoadButton.Visible = false;
             this.masterQueryLoadButton.Click += new System.EventHandler(this.masterQueryLoadButton_Click);
@@ -249,13 +244,12 @@
             // 
             // saveDataObjectButton
             // 
-            this.saveDataObjectButton.Location = new System.Drawing.Point(305, 234);
+            this.saveDataObjectButton.Location = new System.Drawing.Point(6, 76);
             this.saveDataObjectButton.Name = "saveDataObjectButton";
             this.saveDataObjectButton.Size = new System.Drawing.Size(75, 37);
             this.saveDataObjectButton.TabIndex = 41;
             this.saveDataObjectButton.Text = "Save data object";
             this.saveDataObjectButton.UseVisualStyleBackColor = true;
-            this.saveDataObjectButton.Visible = false;
             this.saveDataObjectButton.Click += new System.EventHandler(this.saveDataObjectButton_Click);
             // 
             // totalRecordsLabel
@@ -289,9 +283,9 @@
             // 
             // dataSourceGroupBox
             // 
+            this.dataSourceGroupBox.Controls.Add(this.autoRunCheckBox);
             this.dataSourceGroupBox.Controls.Add(this.sourceTypesGroupBox);
             this.dataSourceGroupBox.Controls.Add(this.persStorageCheckBox);
-            this.dataSourceGroupBox.Controls.Add(this.excelFileRefreshSheetsButton);
             this.dataSourceGroupBox.Controls.Add(this.excelFileSheetsComboBox);
             this.dataSourceGroupBox.Controls.Add(this.excelFileBrowsePathButton);
             this.dataSourceGroupBox.Controls.Add(this.excelFilePathTextbox);
@@ -303,6 +297,18 @@
             this.dataSourceGroupBox.Text = "Data source";
             this.dataSourceGroupBox.Visible = false;
             // 
+            // autoRunCheckBox
+            // 
+            this.autoRunCheckBox.AutoSize = true;
+            this.autoRunCheckBox.Enabled = false;
+            this.autoRunCheckBox.Location = new System.Drawing.Point(502, 98);
+            this.autoRunCheckBox.Name = "autoRunCheckBox";
+            this.autoRunCheckBox.Size = new System.Drawing.Size(84, 17);
+            this.autoRunCheckBox.TabIndex = 57;
+            this.autoRunCheckBox.Text = "Run on load";
+            this.autoRunCheckBox.UseVisualStyleBackColor = true;
+            this.autoRunCheckBox.Visible = false;
+            // 
             // sourceTypesGroupBox
             // 
             this.sourceTypesGroupBox.Controls.Add(this.sourceSharePointRadioButton);
@@ -310,7 +316,7 @@
             this.sourceTypesGroupBox.Enabled = false;
             this.sourceTypesGroupBox.Location = new System.Drawing.Point(6, 19);
             this.sourceTypesGroupBox.Name = "sourceTypesGroupBox";
-            this.sourceTypesGroupBox.Size = new System.Drawing.Size(236, 39);
+            this.sourceTypesGroupBox.Size = new System.Drawing.Size(180, 39);
             this.sourceTypesGroupBox.TabIndex = 56;
             this.sourceTypesGroupBox.TabStop = false;
             this.sourceTypesGroupBox.Text = "Source type";
@@ -325,6 +331,7 @@
             this.sourceSharePointRadioButton.TabIndex = 1;
             this.sourceSharePointRadioButton.Text = "SharePoint Excel";
             this.sourceSharePointRadioButton.UseVisualStyleBackColor = true;
+            this.sourceSharePointRadioButton.CheckedChanged += new System.EventHandler(this.sourceSharePointRadioButton_CheckedChanged);
             // 
             // sourceExcelRadioButton
             // 
@@ -337,28 +344,19 @@
             this.sourceExcelRadioButton.TabStop = true;
             this.sourceExcelRadioButton.Text = "Excel";
             this.sourceExcelRadioButton.UseVisualStyleBackColor = true;
+            this.sourceExcelRadioButton.CheckedChanged += new System.EventHandler(this.sourceExcelRadioButton_CheckedChanged_1);
             // 
             // persStorageCheckBox
             // 
             this.persStorageCheckBox.AutoSize = true;
-            this.persStorageCheckBox.Location = new System.Drawing.Point(494, 98);
+            this.persStorageCheckBox.Location = new System.Drawing.Point(371, 98);
             this.persStorageCheckBox.Name = "persStorageCheckBox";
             this.persStorageCheckBox.Size = new System.Drawing.Size(110, 17);
             this.persStorageCheckBox.TabIndex = 55;
             this.persStorageCheckBox.Text = "Persistent storage";
             this.persStorageCheckBox.UseVisualStyleBackColor = true;
             this.persStorageCheckBox.Visible = false;
-            // 
-            // excelFileRefreshSheetsButton
-            // 
-            this.excelFileRefreshSheetsButton.Location = new System.Drawing.Point(371, 96);
-            this.excelFileRefreshSheetsButton.Name = "excelFileRefreshSheetsButton";
-            this.excelFileRefreshSheetsButton.Size = new System.Drawing.Size(106, 23);
-            this.excelFileRefreshSheetsButton.TabIndex = 54;
-            this.excelFileRefreshSheetsButton.Text = "Refresh sheets";
-            this.excelFileRefreshSheetsButton.UseVisualStyleBackColor = true;
-            this.excelFileRefreshSheetsButton.Visible = false;
-            this.excelFileRefreshSheetsButton.Click += new System.EventHandler(this.excelFileRefreshSheetsButton_Click_1);
+            this.persStorageCheckBox.CheckedChanged += new System.EventHandler(this.persStorageCheckBox_CheckedChanged);
             // 
             // excelFileSheetsComboBox
             // 
@@ -400,18 +398,96 @@
             this.savePresetsButton.UseVisualStyleBackColor = true;
             this.savePresetsButton.Click += new System.EventHandler(this.savePresetsButton_Click);
             // 
+            // descriptionDOTextBox
+            // 
+            this.descriptionDOTextBox.BackColor = System.Drawing.SystemColors.Window;
+            this.descriptionDOTextBox.Location = new System.Drawing.Point(87, 93);
+            this.descriptionDOTextBox.Name = "descriptionDOTextBox";
+            this.descriptionDOTextBox.Size = new System.Drawing.Size(554, 20);
+            this.descriptionDOTextBox.TabIndex = 58;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(119, 79);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(60, 13);
+            this.label2.TabIndex = 59;
+            this.label2.Text = "Description";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(119, 16);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(57, 13);
+            this.label4.TabIndex = 60;
+            this.label4.Text = "SQL query";
+            // 
+            // dataObjectGroupBox
+            // 
+            this.dataObjectGroupBox.Controls.Add(this.currentStatusLabel);
+            this.dataObjectGroupBox.Controls.Add(this.statusLabel);
+            this.dataObjectGroupBox.Controls.Add(this.queryLoadButton);
+            this.dataObjectGroupBox.Controls.Add(this.label4);
+            this.dataObjectGroupBox.Controls.Add(this.queryTextBox);
+            this.dataObjectGroupBox.Controls.Add(this.descriptionDOTextBox);
+            this.dataObjectGroupBox.Controls.Add(this.saveDataObjectButton);
+            this.dataObjectGroupBox.Controls.Add(this.label2);
+            this.dataObjectGroupBox.Location = new System.Drawing.Point(291, 145);
+            this.dataObjectGroupBox.Name = "dataObjectGroupBox";
+            this.dataObjectGroupBox.Size = new System.Drawing.Size(649, 122);
+            this.dataObjectGroupBox.TabIndex = 61;
+            this.dataObjectGroupBox.TabStop = false;
+            this.dataObjectGroupBox.Text = "Data object view";
+            // 
+            // currentStatusLabel
+            // 
+            this.currentStatusLabel.AutoSize = true;
+            this.currentStatusLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.currentStatusLabel.Location = new System.Drawing.Point(11, 60);
+            this.currentStatusLabel.Name = "currentStatusLabel";
+            this.currentStatusLabel.Size = new System.Drawing.Size(35, 13);
+            this.currentStatusLabel.TabIndex = 62;
+            this.currentStatusLabel.Text = "IDLE";
+            this.currentStatusLabel.Visible = false;
+            this.currentStatusLabel.Click += new System.EventHandler(this.currentStatusLabel_Click);
+            // 
+            // statusLabel
+            // 
+            this.statusLabel.AutoSize = true;
+            this.statusLabel.Location = new System.Drawing.Point(6, 45);
+            this.statusLabel.Name = "statusLabel";
+            this.statusLabel.Size = new System.Drawing.Size(40, 13);
+            this.statusLabel.TabIndex = 61;
+            this.statusLabel.Text = "Status:";
+            this.statusLabel.Visible = false;
+            // 
+            // resetButton
+            // 
+            this.resetButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
+            this.resetButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.resetButton.Location = new System.Drawing.Point(42, 48);
+            this.resetButton.Name = "resetButton";
+            this.resetButton.Size = new System.Drawing.Size(195, 35);
+            this.resetButton.TabIndex = 62;
+            this.resetButton.Text = "Reset";
+            this.resetButton.UseVisualStyleBackColor = false;
+            this.resetButton.Click += new System.EventHandler(this.resetButton_Click);
+            // 
             // mainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(952, 618);
             this.ControlBox = false;
-            this.Controls.Add(this.savePresetsButton);
+            this.Controls.Add(this.resetButton);
             this.Controls.Add(this.dataSourceGroupBox);
+            this.Controls.Add(this.dataObjectGroupBox);
+            this.Controls.Add(this.savePresetsButton);
             this.Controls.Add(this.tableRenameButton);
             this.Controls.Add(this.exportFromGridViewButton);
             this.Controls.Add(this.totalRecordsLabel);
-            this.Controls.Add(this.saveDataObjectButton);
             this.Controls.Add(this.loadPresetsButton);
             this.Controls.Add(this.tableEditButton);
             this.Controls.Add(this.masterQueryLoadButton);
@@ -424,10 +500,7 @@
             this.Controls.Add(this.label3);
             this.Controls.Add(this.dataObjectsListView);
             this.Controls.Add(this.flexiLabel);
-            this.Controls.Add(this.queryTextBox);
-            this.Controls.Add(this.label1);
             this.Controls.Add(this.previewGridView);
-            this.Controls.Add(this.queryLoadButton);
             this.Controls.Add(this.masterQueryTextBox);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "mainForm";
@@ -438,6 +511,8 @@
             this.dataSourceGroupBox.PerformLayout();
             this.sourceTypesGroupBox.ResumeLayout(false);
             this.sourceTypesGroupBox.PerformLayout();
+            this.dataObjectGroupBox.ResumeLayout(false);
+            this.dataObjectGroupBox.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -447,7 +522,6 @@
 
         private System.Windows.Forms.Label flexiLabel;
         private System.Windows.Forms.TextBox queryTextBox;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.DataGridView previewGridView;
         private System.Windows.Forms.Button queryLoadButton;
         private System.Windows.Forms.ListView dataObjectsListView;
@@ -469,7 +543,6 @@
         private System.Windows.Forms.Button tableRenameButton;
         private System.Windows.Forms.GroupBox dataSourceGroupBox;
         private System.Windows.Forms.CheckBox persStorageCheckBox;
-        private System.Windows.Forms.Button excelFileRefreshSheetsButton;
         private System.Windows.Forms.ComboBox excelFileSheetsComboBox;
         private System.Windows.Forms.Button excelFileBrowsePathButton;
         private System.Windows.Forms.TextBox excelFilePathTextbox;
@@ -477,6 +550,14 @@
         private System.Windows.Forms.RadioButton sourceSharePointRadioButton;
         private System.Windows.Forms.RadioButton sourceExcelRadioButton;
         private System.Windows.Forms.Button savePresetsButton;
+        private System.Windows.Forms.TextBox descriptionDOTextBox;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.GroupBox dataObjectGroupBox;
+        private System.Windows.Forms.Label currentStatusLabel;
+        private System.Windows.Forms.Label statusLabel;
+        private System.Windows.Forms.CheckBox autoRunCheckBox;
+        private System.Windows.Forms.Button resetButton;
     }
 }
 

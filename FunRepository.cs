@@ -17,37 +17,34 @@ using Microsoft.Office.Interop.Excel;
 
 namespace Report_generator
 {
-    public static class JazzyFunctionsByPatryk //ver090116_1
+    public static class FunRepository //ver090116_1
     {
         public static string queryString;
         public static string connectionStringExcel;
 
+        public static string Right(string value, int length) { return value.Substring(value.Length - length); }
         public static void WriteSettings(string masterQuery, Dictionary<string, DataObject> dataObjectCollecion) 
         {
             string separatorDO = @"!";
-            string fileName = JazzyFunctionsByPatryk.BrowseSavePath("txt");
+            string fileName = FunRepository.BrowseSavePath("txt");
             StreamWriter sw = new StreamWriter(fileName, false); /* True stands for appending (not overwrt) */
-            //sw.WriteLine("*******");
             if (masterQuery != "") { sw.WriteLine("Master_Query = " + masterQuery.Replace(Environment.NewLine, " ")); }
             foreach (DataObject currentDO in dataObjectCollecion.Values)
             {
                 sw.WriteLine("Data_Object" + separatorDO + currentDO.Name + separatorDO + "SQL_Query = " + currentDO.SqlQuery.Replace(Environment.NewLine, " "));
+                sw.WriteLine("Data_Object" + separatorDO + currentDO.Name + separatorDO + "Description = " + currentDO.Description);
                 if(currentDO.PersStorage)
                 {
                     sw.WriteLine("Data_Object" + separatorDO + currentDO.Name + separatorDO + "Source_path = " + currentDO.ExcelFilePath);
                     sw.WriteLine("Data_Object" + separatorDO + currentDO.Name + separatorDO + "Source_table = " + currentDO.ExcelFileSheet);
                 }
             }
-            //sw.WriteLine(presetsName);
-            //sw.WriteLine(operationType);
-            //sw.WriteLine(tag);
-            //sw.WriteLine(sqlQuery);
             sw.Close();
             MessageBox.Show("Successfully saved the presets.");
         }
         public static void ReadSettings(ref string masterQuery, ref Dictionary<string, DataObject> dataObjectCollecion)
         {
-            string fileName = JazzyFunctionsByPatryk.BrowseFilePath("Preset files in txt (*.txt)|*.txt");
+            string fileName = FunRepository.BrowseFilePath("Preset files in txt (*.txt)|*.txt");
             dataObjectCollecion.Clear();
             StreamReader sr = new StreamReader(fileName);
 
@@ -85,6 +82,7 @@ namespace Report_generator
                                 switch(presetSubType)
                                 {
                                     case "SQL_Query": currentDataObject.SqlQuery = presetValue; break;
+                                    case "Description": currentDataObject.Description = presetValue; break;
                                     case "Source_path": 
                                         currentDataObject.ExcelFilePath = presetValue;
                                         currentDataObject.PersStorage = true;
@@ -131,19 +129,22 @@ namespace Report_generator
             var sbConnection = new OleDbConnectionStringBuilder();
             string strExtendedProperties = string.Empty;
             sbConnection.Provider = "Microsoft.ACE.OLEDB.12.0";
+            //sbConnection.Provider = "Microsoft.Jet.Oledb.4.0";
+
             //string strDataSource = string.Empty;
             string sourceFileExtension = System.IO.Path.GetExtension(filePath);
             //int sourceType;
             //string connectionPropertiesExcelVersion = string.Empty;
-
+            bool isExcel = false;
             switch (sourceFileExtension)
             {
-                case ".xls": strExtendedProperties = "Excel 8.0; HDR = Yes; IMEX = 1;";  break; 
-                case ".xlsx": strExtendedProperties = "Excel 12.0 Xml; HDR = Yes; IMEX = 1;";  break;
-                case ".xlsm": strExtendedProperties = "Excel 12.0 Macro; HDR = Yes; IMEX = 1;Integrated Security=True;READONLY=1;"; break; //test
+                case ".xls": strExtendedProperties = "Excel 8.0;"; isExcel = true; break;
+                case ".xlsx": strExtendedProperties = "Excel 12.0 Xml;"; isExcel = true; break;
+                case ".xlsm": strExtendedProperties = "Excel 12.0 Macro;"; isExcel = true; break; //test Integrated Security=True;READONLY=1;
                 //case ".accdb": break;//strDataSource = "|DataDirectory|"; //strExtendedProperties = "Persist Security Info = False;" //sbConnection.PersistSecurityInfo = false;
-                default: break; //sbConnection.Provider = "Microsoft.Jet.Oledb.4.0";
+                default: break;
             }
+            if (isExcel) { strExtendedProperties += " HDR = Yes; IMEX = 1;"; }
             //strDataSource +=filePath;
             sbConnection.DataSource = filePath;
             //if (sourceFileExtension == ".accdb") { sbConnection.DataSource = "|DataDirectory|" + filePath; } else { sbConnection.DataSource = filePath; }
@@ -168,6 +169,7 @@ namespace Report_generator
                     { listSheet.Add(row["TABLE_NAME"].ToString().Replace("$", "")); }
                     else
                     { if (row["TABLE_TYPE"].ToString() == "TABLE") { listSheet.Add(row["TABLE_NAME"].ToString()); } }
+
                 }
                 conn.Close();
             }
@@ -232,7 +234,7 @@ namespace Report_generator
             foreach (DataColumn col in dt.Columns)
             {
                 ADOX.Column dbField = new Column();
-                dbField.Name = JazzyFunctionsByPatryk.GetCleanAccessObjectName(col.ColumnName);
+                dbField.Name = FunRepository.GetCleanAccessObjectName(col.ColumnName);
                 dbField.Attributes = ColumnAttributesEnum.adColNullable;
                 switch (col.DataType.ToString())
                 {
@@ -254,7 +256,7 @@ namespace Report_generator
             string columnsValues = string.Empty;
             int paramIteration = 1;
             foreach (DataColumn col in dt.Columns)
-            { columnsNames += "[" + JazzyFunctionsByPatryk.GetCleanAccessObjectName(col.ColumnName) + "]" + ", "; columnsValues += @"@" + paramIteration + ", "; paramIteration += 1; }//GetCleanParameterName(col.ColumnName)
+            { columnsNames += "[" + FunRepository.GetCleanAccessObjectName(col.ColumnName) + "]" + ", "; columnsValues += @"@" + paramIteration + ", "; paramIteration += 1; }//GetCleanParameterName(col.ColumnName)
             columnsNames = columnsNames.Remove(columnsNames.Length - 2);/*For removing final comma*/
             columnsValues = columnsValues.Remove(columnsValues.Length - 2);
 
@@ -297,22 +299,6 @@ namespace Report_generator
             newParameter.Value = null;
             return newParameter;
         }
-        //private static List<string> GetOleDbSchema(string sourcePath)
-        //{
-        //    String connect = "Provider=Microsoft.JET.OLEDB.4.0;data source=.\\Employee.mdb";
-        //    OleDbConnection con = new OleDbConnection(connect);
-        //    con.Open();
-        //    Console.WriteLine("Made the connection to the database");
-
-        //    Console.WriteLine("Information for each table contains:");
-        //    DataTable tables = con.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, new object[] { null, null, null, "TABLE" });
-
-        //    Console.WriteLine("The tables are:");
-        //    foreach (DataRow row in tables.Rows)
-        //        Console.Write("  {0}", row[2]);
-
-        //    con.Close();
-        //}
         public static string SummonInputBox(string prompt, string title = "", string defaultResponse="") { return Interaction.InputBox(prompt, title, defaultResponse); }
         public static void DataTableToExcelFile(System.Data.DataTable dt, string targetPath) /* Experimental, breaks at connection open due to unrecognized format */
         {
@@ -331,7 +317,7 @@ namespace Report_generator
                 { 
                     cmd.ExecuteNonQuery();
                     cmd.CommandText = GetSqlInsertNonQuery(dt, tableName);
-                    JazzyFunctionsByPatryk.SetOleDbCommandParameters(ref cmd, dt);
+                    FunRepository.SetOleDbCommandParameters(ref cmd, dt);
 
                     foreach (DataRow row in dt.Rows)
                     {
@@ -351,7 +337,7 @@ namespace Report_generator
             //cmd.CommandText = "CREATE TABLE [table1] (id INT, name VARCHAR, datecol DATE );";
             string columnsNamesWithType = string.Empty;
             foreach (DataColumn col in dt.Columns)
-            { columnsNamesWithType += JazzyFunctionsByPatryk.GetColumnNameAndTypeForSqlCreate(col.ColumnName, col) + ", "; }
+            { columnsNamesWithType += FunRepository.GetColumnNameAndTypeForSqlCreate(col.ColumnName, col) + ", "; }
             columnsNamesWithType = columnsNamesWithType.Remove(columnsNamesWithType.Length - 2);/*For removing final comma*/
 
             string fullReturnString = "CREATE TABLE [" + tableName + "] (" + columnsNamesWithType + ");";

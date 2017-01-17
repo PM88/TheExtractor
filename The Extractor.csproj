@@ -55,7 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataObject.cs" />
-    <Compile Include="JazzyFunctionsByPatryk.cs" />
+    <Compile Include="FunRepository.cs" />
     <Compile Include="mainForm.cs">
       <SubType>Form</SubType>
     </Compile>
