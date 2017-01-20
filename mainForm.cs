@@ -18,7 +18,7 @@ namespace Report_generator
 {
     public partial class mainForm : Form
     {
-        public const string appVersion = "2.0.0.0 BETA";
+        public const string appVersion = "2.0.0.0";
         //public ADOX.Catalog storageDbCatalog;
         public Dictionary<string, DataObject> dataObjectCollecion;
         public string currentFolder;
@@ -108,11 +108,12 @@ namespace Report_generator
             /*Preparing database connection*/
             string excelFileConnectionString = FunRepository.GetConnectionString(excelFilePath);
 
-            //Create data table
+            FunRepository.SetCustomSqlFunctions(ref queryString);
             excelSheetDataTable = FunRepository.GetDataTable(excelFileConnectionString, queryString);
 
             /*Extract data into data grid on form */
-            this.previewGridView.DataSource = excelSheetDataTable; queryTextBox.Text = queryString;
+            this.previewGridView.DataSource = excelSheetDataTable;
+            queryTextBox.Text = queryString;
             UpdateTotalRecords(excelSheetDataTable);
         }
         private void UpdateTotalRecords(DataTable dt = null)
@@ -158,6 +159,8 @@ namespace Report_generator
         }
         private void masterQueryLoadButton_Click(object sender, EventArgs e)
         {
+            ClearTempDB();
+            
             masterConnString = FunRepository.GetConnectionString(accessStorageDbPath);
 
             var storageDbCatalog = new ADOX.Catalog();
@@ -217,7 +220,6 @@ namespace Report_generator
             finally { con.Dispose(); tempDBConnection.Close() ; storageDbCatalog = null; } 
         }
         private void dataObjectsListView_SelectedIndexChanged(object sender, EventArgs e) { PreviewMode(); }
-
         //private void dataObjectsListView_MouseUp(object sender, MouseEventArgs e) /* Not working at the moment */
         //{ if (e.Button == MouseButtons.Right) { } }
         private void PreviewMode()
@@ -250,7 +252,11 @@ namespace Report_generator
             dataObjectsListView.SelectedItems[0].Remove();
 
             excelFilePathTextbox.Text = "";
-            excelFileSheetsComboBox.DataSource = null; excelFileSheetsComboBox.Items.Clear();
+            queryTextBox.Text = "";
+            descriptionDOTextBox.Text = "";
+            excelFileSheetsComboBox.DataSource = null; 
+            excelFileSheetsComboBox.Items.Clear();
+            this.previewGridView.DataSource = null; 
             DemSwitchez(99);
             UpdateTotalRecords();
         }
@@ -270,6 +276,7 @@ namespace Report_generator
             currentDataObject.ExcelFileSheet=excelFileSheetsComboBox.Text;
             currentDataObject.PersStorage = persStorageCheckBox.Checked;
             currentDataObject.Description = descriptionDOTextBox.Text;
+            currentDataObject.RunLoad = autoRunCheckBox.Checked;
             MessageBox.Show("Saved successfully.");
         }
         private void exportFromGridViewButton_Click(object sender, EventArgs e)
@@ -289,12 +296,12 @@ namespace Report_generator
             dataObjectCollecion.Add(newDataSourceName, newDataObject);
 
             string[] nameArray = new string[] { newDataSourceName };
-            AddDataObjectNameToListView(nameArray);
+            AddDataObjectsNamesToListView(nameArray);
 
             DemSwitchez(1, "Choose the source file and sheet");
             EditMode();
         }
-        private void AddDataObjectNameToListView(string[] newDataSourceNames)
+        private void AddDataObjectsNamesToListView(string[] newDataSourceNames)
         {
             foreach (string currentItem in newDataSourceNames) { dataObjectsListView.Items.Add(currentItem); }
 
@@ -309,24 +316,26 @@ namespace Report_generator
 
             this.dataObjectsListView.Items.Clear();
             string[] keys = dataObjectCollecion.Keys.ToArray();
-            AddDataObjectNameToListView(keys);
+            AddDataObjectsNamesToListView(keys);
         }
         private void tableRenameButton_Click(object sender, EventArgs e)
         {
             if (dataObjectsListView.SelectedItems.Count == 0) { return; }
-            string selectedName = dataObjectsListView.SelectedItems[0].SubItems[0].Text;
-            DataObject currentDataObject = dataObjectCollecion[selectedName];
-
-            string selectedDataSourceNewName = FunRepository.SummonInputBox("Provide the new name of the data source.", "Enter name", currentDataObject.Name);
-
+            string selectedDataSourceName = dataObjectsListView.SelectedItems[0].SubItems[0].Text;
+            string selectedDataSourceNewName = FunRepository.SummonInputBox("Provide the new name of the data source.", "Enter name", selectedDataSourceName);//currentDataObject.Name);
             if (!(CheckDataSourceName(ref selectedDataSourceNewName))) { return; }
 
-            dataObjectCollecion[selectedName].Name = selectedDataSourceNewName;
+            var newDataObject = dataObjectCollecion[selectedDataSourceName];
+            dataObjectCollecion.Add(selectedDataSourceNewName, newDataObject);
+            dataObjectCollecion.Remove(selectedDataSourceName);
+
+            dataObjectCollecion[selectedDataSourceNewName].Name = selectedDataSourceNewName;
+            
             dataObjectsListView.SelectedItems[0].SubItems[0].Text = selectedDataSourceNewName;
         }
         private bool CheckDataSourceName(ref string name)
         {
-            if (name == "") { MessageBox.Show("Blank name!"); return false; }
+            if (name == "") { return false; }//MessageBox.Show("Blank name!");
             string correctedName = FunRepository.GetCleanAccessObjectName(name, true);
             if (name != correctedName) { MessageBox.Show("The name has incorrect characters and has been corrected to: " + correctedName); name = correctedName; }
             if (dataObjectCollecion.ContainsKey(name)) { MessageBox.Show("There is already a data object with that name!"); return false; }
@@ -341,5 +350,6 @@ namespace Report_generator
         private void persStorageCheckBox_CheckedChanged(object sender, EventArgs e)
         { if (persStorageCheckBox.Checked == true) { autoRunCheckBox.Enabled = true; } else { autoRunCheckBox.Enabled = false; } }
         private void resetButton_Click(object sender, EventArgs e) { ResetSettings(); }
+        private void getSheetsButton_Click(object sender, EventArgs e) { RefreshExcelSheets(this.excelFilePathTextbox.Text); }
     }
 }

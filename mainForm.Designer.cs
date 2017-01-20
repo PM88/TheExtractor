@@ -66,6 +66,7 @@
             this.currentStatusLabel = new System.Windows.Forms.Label();
             this.statusLabel = new System.Windows.Forms.Label();
             this.resetButton = new System.Windows.Forms.Button();
+            this.getSheetsButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.previewGridView)).BeginInit();
             this.dataSourceGroupBox.SuspendLayout();
             this.sourceTypesGroupBox.SuspendLayout();
@@ -283,6 +284,7 @@
             // 
             // dataSourceGroupBox
             // 
+            this.dataSourceGroupBox.Controls.Add(this.getSheetsButton);
             this.dataSourceGroupBox.Controls.Add(this.autoRunCheckBox);
             this.dataSourceGroupBox.Controls.Add(this.sourceTypesGroupBox);
             this.dataSourceGroupBox.Controls.Add(this.persStorageCheckBox);
@@ -475,6 +477,17 @@
             this.resetButton.UseVisualStyleBackColor = false;
             this.resetButton.Click += new System.EventHandler(this.resetButton_Click);
             // 
+            // getSheetsButton
+            // 
+            this.getSheetsButton.Location = new System.Drawing.Point(6, 96);
+            this.getSheetsButton.Name = "getSheetsButton";
+            this.getSheetsButton.Size = new System.Drawing.Size(75, 23);
+            this.getSheetsButton.TabIndex = 58;
+            this.getSheetsButton.Text = "Get sheets";
+            this.getSheetsButton.UseVisualStyleBackColor = true;
+            this.getSheetsButton.Visible = false;
+            this.getSheetsButton.Click += new System.EventHandler(this.getSheetsButton_Click);
+            // 
             // mainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -558,6 +571,7 @@
         private System.Windows.Forms.Label statusLabel;
         private System.Windows.Forms.CheckBox autoRunCheckBox;
         private System.Windows.Forms.Button resetButton;
+        private System.Windows.Forms.Button getSheetsButton;
     }
 }
 

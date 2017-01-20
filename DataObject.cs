@@ -15,6 +15,7 @@ namespace Report_generator
         public string ExcelFileSheet;
         public bool PersStorage;
         public string Description;
+        public bool RunLoad;
         //public string sourceAddress;
         //public string sourceExcelSheet;
 

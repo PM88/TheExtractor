@@ -28,16 +28,21 @@ namespace Report_generator
             string separatorDO = @"!";
             string fileName = FunRepository.BrowseSavePath("txt");
             StreamWriter sw = new StreamWriter(fileName, false); /* True stands for appending (not overwrt) */
+
+            string sqlString = string.Empty;
             if (masterQuery != "") { sw.WriteLine("Master_Query = " + masterQuery.Replace(Environment.NewLine, " ")); }
             foreach (DataObject currentDO in dataObjectCollecion.Values)
             {
-                sw.WriteLine("Data_Object" + separatorDO + currentDO.Name + separatorDO + "SQL_Query = " + currentDO.SqlQuery.Replace(Environment.NewLine, " "));
+                sqlString = currentDO.SqlQuery;
+                if (sqlString != "") { sw.WriteLine("Data_Object" + separatorDO + currentDO.Name + separatorDO + "SQL_Query = " + sqlString.Replace(Environment.NewLine, " ")); }
                 sw.WriteLine("Data_Object" + separatorDO + currentDO.Name + separatorDO + "Description = " + currentDO.Description);
                 if(currentDO.PersStorage)
                 {
                     sw.WriteLine("Data_Object" + separatorDO + currentDO.Name + separatorDO + "Source_path = " + currentDO.ExcelFilePath);
                     sw.WriteLine("Data_Object" + separatorDO + currentDO.Name + separatorDO + "Source_table = " + currentDO.ExcelFileSheet);
+                    sw.WriteLine("Data_Object" + separatorDO + currentDO.Name + separatorDO + "Persistent_storage = " + currentDO.PersStorage);
                 }
+                if (currentDO.RunLoad) { sw.WriteLine("Data_Object" + separatorDO + currentDO.Name + separatorDO + "Run_on_load = " + currentDO.RunLoad); }
             }
             sw.Close();
             MessageBox.Show("Successfully saved the presets.");
@@ -84,13 +89,13 @@ namespace Report_generator
                                     case "SQL_Query": currentDataObject.SqlQuery = presetValue; break;
                                     case "Description": currentDataObject.Description = presetValue; break;
                                     case "Source_path": 
-                                        currentDataObject.ExcelFilePath = presetValue;
-                                        currentDataObject.PersStorage = true;
-                                        break;
+                                        currentDataObject.ExcelFilePath = presetValue; break;
                                     case "Source_table": 
-                                        currentDataObject.ExcelFileSheet = presetValue;
-                                        currentDataObject.PersStorage = true;
-                                        break;
+                                        currentDataObject.ExcelFileSheet = presetValue; break;
+                                    case "Persistent_storage":
+                                        currentDataObject.PersStorage = true; break;
+                                    case "Run_on_load":
+                                        currentDataObject.PersStorage = true; break;
                                 }
                             } break;
                     }
@@ -99,6 +104,26 @@ namespace Report_generator
                 MessageBox.Show("Successfully loaded the presets.");
             }
             catch { MessageBox.Show("The presets file is corrupted! Please restart the application."); return; }
+        }
+        public static void SetCustomSqlFunctions(ref string queryString)
+        {
+            string marker = @"`";
+            int countMarkers = queryString.Length - queryString.Replace(marker, "").Length;
+            if (countMarkers == 0 || countMarkers % 2 != 0) { return; }
+            string customSqlFunction = string.Empty;
+            int indexStart = 0;
+            int indexEnd = 1;
+
+            for(int i = 2; i <= countMarkers; i = i + 2)
+            { 
+                int markerStartIndex = queryString.IndexOf(marker);
+                int markerEndIndex = IndexOfNth(queryString, marker, 0, 2);
+                if (markerStartIndex == 0 || markerEndIndex == 0) { return; }
+                //customSqlFunction = queryString.Substring(markerStartIndex,);
+
+                indexStart = indexStart + 2;
+                indexEnd = indexEnd + 2;
+            }
         }
         public static int IndexOfNth(this string input, string value, int startIndex, int nth)
         {
@@ -126,50 +151,53 @@ namespace Report_generator
         }
         public static string GetConnectionString(string filePath)
         {
-            var sbConnection = new OleDbConnectionStringBuilder();
-            string strExtendedProperties = string.Empty;
-            sbConnection.Provider = "Microsoft.ACE.OLEDB.12.0";
-            //sbConnection.Provider = "Microsoft.Jet.Oledb.4.0";
+            Dictionary<string, string> props = new Dictionary<string, string>();
+            props["Provider"] = "Microsoft.ACE.OLEDB.12.0;";
+            props["Data Source"] = @"'" + filePath + @"'" + ";";
 
-            //string strDataSource = string.Empty;
-            string sourceFileExtension = System.IO.Path.GetExtension(filePath);
-            //int sourceType;
-            //string connectionPropertiesExcelVersion = string.Empty;
             bool isExcel = false;
-            switch (sourceFileExtension)
+            string extProps = string.Empty;
+            //string sourceFileExtension = System.IO.Path.GetExtension(filePath);
+            switch (System.IO.Path.GetExtension(filePath))
             {
-                case ".xls": strExtendedProperties = "Excel 8.0;"; isExcel = true; break;
-                case ".xlsx": strExtendedProperties = "Excel 12.0 Xml;"; isExcel = true; break;
-                case ".xlsm": strExtendedProperties = "Excel 12.0 Macro;"; isExcel = true; break; //test Integrated Security=True;READONLY=1;
-                //case ".accdb": break;//strDataSource = "|DataDirectory|"; //strExtendedProperties = "Persist Security Info = False;" //sbConnection.PersistSecurityInfo = false;
+                case ".xls": extProps = "Excel 8.0;"; isExcel = true; break;
+                case ".xlsx": extProps = "Excel 12.0 Xml;"; isExcel = true; break;
+                case ".xlsm": extProps = "Excel 12.0 Macro;"; isExcel = true; break;
                 default: break;
             }
-            if (isExcel) { strExtendedProperties += " HDR = Yes; IMEX = 1;"; }
-            //strDataSource +=filePath;
-            sbConnection.DataSource = filePath;
-            //if (sourceFileExtension == ".accdb") { sbConnection.DataSource = "|DataDirectory|" + filePath; } else { sbConnection.DataSource = filePath; }
-            
-            if (!(strExtendedProperties == string.Empty)) { sbConnection.Add("Extended Properties", strExtendedProperties); }
-            return sbConnection.ToString(); //excelFileConnectionString;
-            //string connectionProperties = connectionPropertiesExcelVersion + "; HDR=YES\";"; //HDR means that the first row is header
-            //string excelFileConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0; Data Source=" + excelFilePath
-            //    + "; Extended Properties=" + connectionProperties;
+
+            if (isExcel) { props["Extended Properties"] = @"'" + extProps + @"HDR=Yes;IMEX=1;';"; } //props["Provider"] = @"'Microsoft.Jet.Oledb.4.0';"; Jet is too problematic problem with drivers (ISAM)
+
+            var sb = new StringBuilder();
+            foreach (KeyValuePair<string, string> prop in props)
+            {
+                sb.Append(prop.Key);
+                sb.Append('=');
+                sb.Append(prop.Value);
+                //sb.Append(';');
+            }
+            string readyConnectionString = sb.ToString();
+            return readyConnectionString;
         }
         public static List<string> GetOleDbSchema(string excelFilePath)
         {
             var listSheet = new List<string>();
             string connectionString = GetConnectionString(excelFilePath);
+            string newItem = string.Empty;
+            bool isExcel = excelFilePath.Contains(".xls");
+
             using (var conn = new OleDbConnection(connectionString)) //sbConnection.ToString()))
             {
                 conn.Open();
                 System.Data.DataTable dtSheet = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, null);
                 foreach (DataRow row in dtSheet.Rows)
                 {
-                    if (row["TABLE_NAME"].ToString().Contains("$")) /*checks whether row contains '_xlnm#_FilterDatabase' or sheet name(i.e. sheet name always ends with $ sign)*/
-                    { listSheet.Add(row["TABLE_NAME"].ToString().Replace("$", "")); }
-                    else
-                    { if (row["TABLE_TYPE"].ToString() == "TABLE") { listSheet.Add(row["TABLE_NAME"].ToString()); } }
-
+                    if (row["TABLE_TYPE"].ToString() == "TABLE") 
+                    { 
+                        newItem = row["TABLE_NAME"].ToString(); 
+                        if (isExcel) { newItem = newItem.Replace("$", ""); }
+                        listSheet.Add(newItem);
+                    }
                 }
                 conn.Close();
             }
@@ -394,6 +422,36 @@ namespace Report_generator
             finally { KillTask("EXCEL"); }
         }
         //### FUNCTIONS MORGUE ####
+        #region OLD public static string GetConnectionString(string filePath)
+        //public static string GetConnectionString(string filePath)
+        //{
+        //    var sbConnection = new OleDbConnectionStringBuilder();
+        //    string strExtendedProperties = string.Empty;
+
+        //    string sourceFileExtension = System.IO.Path.GetExtension(filePath);
+        //    bool isExcel = false;
+        //    switch (sourceFileExtension)
+        //    {
+        //        case ".xls": strExtendedProperties = "Excel 8.0;"; isExcel = true; break;
+        //        case ".xlsx": strExtendedProperties = "Excel 12.0 Xml;"; isExcel = true; break;
+        //        case ".xlsm": strExtendedProperties = "Excel 12.0 Macro;"; isExcel = true; break; //test for SP; Integrated Security=True;READONLY=1;
+        //        //case ".accdb": break;//strDataSource = "|DataDirectory|"; //strExtendedProperties = "Persist Security Info = False;" //sbConnection.PersistSecurityInfo = false;
+        //        default: break;
+        //    }
+        //    if (isExcel) { sbConnection.Provider = "Microsoft.Jet.Oledb.4.0"; }//strExtendedProperties += " HDR=Yes; IMEX=1;"; }//strExtendedProperties = "'" + strExtendedProperties + "'"; } 
+        //    else { sbConnection.Provider = "Microsoft.ACE.OLEDB.12.0"; }
+        //    /* Jet Oledb uses Excel named ranges */
+
+        //    sbConnection.DataSource = filePath;
+        //    //if (sourceFileExtension == ".accdb") { sbConnection.DataSource = "|DataDirectory|" + filePath; } else { sbConnection.DataSource = filePath; }
+
+        //    if (!(strExtendedProperties == string.Empty)) { sbConnection.Add("Extended Properties", strExtendedProperties); }
+        //    string readyConnectionString = sbConnection.ToString();
+        //    //if (isExcel) { readyConnectionString = "OLEDB;" + readyConnectionString; }
+        //    return readyConnectionString;
+        //}
+        #endregion
+        //####################################################################################################################################
         #region Local vars
         //public void SetQueryString(string qs) { queryString = qs; }
         //public void SetConnectionStringExcel(string excelFilePath) { connectionStringExcel = GetConnectionStringExcel(excelFilePath); }
