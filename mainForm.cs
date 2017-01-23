@@ -95,25 +95,26 @@ namespace Report_generator
         {
             //pickup multithread for loading
             
-            
             string excelFilePath = this.excelFilePathTextbox.Text;
 
             if (excelFilePath == "") { MessageBox.Show("File path is missing!"); return; }
-            System.Data.DataTable excelSheetDataTable;
-            /*Prepare SQL Query*/
+            //System.Data.DataTable excelSheetDataTable;
+
             string queryString = queryTextBox.Text;
             if (queryString == "") { queryString = "SELECT * FROM [" + this.excelFileSheetsComboBox.Text.Replace("'", "") + "$]"; /*+ "$B1:G3]"*/ }
             this.queryTextBox.Text = queryString;
 
-            /*Preparing database connection*/
-            string excelFileConnectionString = FunRepository.GetConnectionString(excelFilePath);
+            FillPreviewGridView(excelFilePath, ref queryString);
 
-            FunRepository.SetCustomSqlFunctions(ref queryString);
-            excelSheetDataTable = FunRepository.GetDataTable(excelFileConnectionString, queryString);
-
-            /*Extract data into data grid on form */
-            this.previewGridView.DataSource = excelSheetDataTable;
             queryTextBox.Text = queryString;
+        }
+        private void FillPreviewGridView(string excelFilePath, ref string queryString)
+        {
+            System.Data.DataTable excelSheetDataTable;
+            string excelFileConnectionString = FunRepository.GetConnectionString(excelFilePath);
+            FunRepository.SetCustomSqlFunctions(ref queryString, excelFilePath);
+            excelSheetDataTable = FunRepository.GetDataTable(excelFileConnectionString, queryString);
+            try { this.previewGridView.DataSource = excelSheetDataTable; } catch { }
             UpdateTotalRecords(excelSheetDataTable);
         }
         private void UpdateTotalRecords(DataTable dt = null)
@@ -212,7 +213,7 @@ namespace Report_generator
                 if (masterQuery != "") 
                 { 
                     var masterDataTable = FunRepository.GetDataTable(masterConnString, masterQuery);
-                    this.previewGridView.DataSource = masterDataTable;
+                    try { this.previewGridView.DataSource = masterDataTable; } catch { }
                     UpdateTotalRecords(masterDataTable);
                 }
             }
@@ -231,7 +232,7 @@ namespace Report_generator
 
             if (dataObjectsListView.SelectedItems.Count == 0) { return; }
             DataObject currentDataObject = dataObjectCollecion[dataObjectsListView.SelectedItems[0].SubItems[0].Text];
-            previewGridView.DataSource = currentDataObject.DataTable;
+            try { previewGridView.DataSource = currentDataObject.DataTable; } catch { }
             queryTextBox.Text = currentDataObject.SqlQuery;
 
             DemSwitchez(0);
@@ -317,6 +318,13 @@ namespace Report_generator
             this.dataObjectsListView.Items.Clear();
             string[] keys = dataObjectCollecion.Keys.ToArray();
             AddDataObjectsNamesToListView(keys);
+
+            foreach(var key in dataObjectCollecion.Keys)
+            {
+                DataObject currentDataObject = dataObjectCollecion[key];
+                if(currentDataObject.RunLoad && currentDataObject.ExcelFilePath != "")
+                { currentDataObject.DataTable = FunRepository.GetDataTable(FunRepository.GetConnectionString(currentDataObject.ExcelFilePath), currentDataObject.SqlQuery); }
+            }
         }
         private void tableRenameButton_Click(object sender, EventArgs e)
         {

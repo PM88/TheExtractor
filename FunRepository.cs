@@ -17,7 +17,7 @@ using Microsoft.Office.Interop.Excel;
 
 namespace Report_generator
 {
-    public static class FunRepository //ver090116_1
+    public static class FunRepository //ver200117
     {
         public static string queryString;
         public static string connectionStringExcel;
@@ -88,14 +88,10 @@ namespace Report_generator
                                 {
                                     case "SQL_Query": currentDataObject.SqlQuery = presetValue; break;
                                     case "Description": currentDataObject.Description = presetValue; break;
-                                    case "Source_path": 
-                                        currentDataObject.ExcelFilePath = presetValue; break;
-                                    case "Source_table": 
-                                        currentDataObject.ExcelFileSheet = presetValue; break;
-                                    case "Persistent_storage":
-                                        currentDataObject.PersStorage = true; break;
-                                    case "Run_on_load":
-                                        currentDataObject.PersStorage = true; break;
+                                    case "Source_path": currentDataObject.ExcelFilePath = presetValue; break;
+                                    case "Source_table": currentDataObject.ExcelFileSheet = presetValue; break;
+                                    case "Persistent_storage": currentDataObject.PersStorage = true; break;
+                                    case "Run_on_load": currentDataObject.RunLoad = true; break;
                                 }
                             } break;
                     }
@@ -105,25 +101,82 @@ namespace Report_generator
             }
             catch { MessageBox.Show("The presets file is corrupted! Please restart the application."); return; }
         }
-        public static void SetCustomSqlFunctions(ref string queryString)
+        public static void SetCustomSqlFunctions(ref string queryString, string excelFilePath)
         {
             string marker = @"`";
             int countMarkers = queryString.Length - queryString.Replace(marker, "").Length;
             if (countMarkers == 0 || countMarkers % 2 != 0) { return; }
+
             string customSqlFunction = string.Empty;
-            int indexStart = 0;
-            int indexEnd = 1;
+            //string customSqlFunctionType = string.Empty;
+            string customSqlFunctionValue = string.Empty;
+            //int indexStart = 0;
+            //int indexEnd = 1;
+            string excelFileSheet = string.Empty;
+            string currChar = string.Empty;
+            string currString = string.Empty;
+            int currCharIndex = 0;
+            string excelAddress = string.Empty;
+            string customSqlFunctionNoMarkers = string.Empty; //Find way to avoid additional var
 
             for(int i = 2; i <= countMarkers; i = i + 2)
             { 
                 int markerStartIndex = queryString.IndexOf(marker);
                 int markerEndIndex = IndexOfNth(queryString, marker, 0, 2);
                 if (markerStartIndex == 0 || markerEndIndex == 0) { return; }
-                //customSqlFunction = queryString.Substring(markerStartIndex,);
 
-                indexStart = indexStart + 2;
-                indexEnd = indexEnd + 2;
+                customSqlFunction = queryString.Substring(markerStartIndex, markerEndIndex - markerStartIndex);
+                customSqlFunctionNoMarkers = queryString.Substring(markerStartIndex + 1, markerEndIndex - markerStartIndex - 1);
+                if (customSqlFunction.Contains("CurReg")) 
+                {
+                    customSqlFunctionValue = customSqlFunctionNoMarkers.Remove(0, 6);
+                    //columnsNames = columnsNames.Remove(columnsNames.Length - 2);
+                    currString = queryString.Remove(markerStartIndex);
+                    while(currChar != "[")
+                    {
+                        currCharIndex = currString.Length - 1;
+                        currString = currString.Remove(currCharIndex); 
+                        currChar = currString[currString.Length - 1].ToString(); 
+                    }
+                    excelFileSheet = queryString.Substring(currCharIndex, markerStartIndex - currCharIndex - 1); /* Minus one is to offset the $ */
+                    excelAddress = GetExcelCurRegionWithInterop(customSqlFunctionValue, excelFilePath, excelFileSheet);
+                    queryString.Replace(customSqlFunction, excelAddress);
+                }
+
+                //indexStart = indexStart + 2;
+                //indexEnd = indexEnd + 2;
             }
+        }
+        public static string GetExcelCurRegionWithInterop(string addressStart, string excelFilePath, string excelFileSheet) 
+        {
+            //var excelApp = new Microsoft.Office.Interop.Excel.Application();
+            //var excelRange = excelApp.Workbooks(excelFilePath)
+            var xlApp = new Microsoft.Office.Interop.Excel.Application();
+            Microsoft.Office.Interop.Excel.Workbook xlWorkBook = null;
+            Microsoft.Office.Interop.Excel.Worksheet xlWorkSheet = null;
+            Microsoft.Office.Interop.Excel.Range range = null;
+            string result = string.Empty;
+            try 
+            {
+                xlWorkBook = xlApp.Workbooks.Open(excelFilePath);//@"d:\csharp-Excel.xls", 0, true, 5, "", "", true, Microsoft.Office.Interop.Excel.XlPlatform.xlWindows, "\t", false, false, 0, true, 1, 0);
+                xlWorkSheet = xlWorkBook.Worksheets.get_Item(excelFileSheet);//(Worksheet)
+                range = xlWorkSheet.get_Range(addressStart, Type.Missing).CurrentRegion;
+            }
+            finally
+            {
+                //pickup filling result to try; test closing w/o opening; move the excel dispose method to live; check replacing in test unit
+                if (range != null) { result = range.get_AddressLocal(true, true, XlReferenceStyle.xlA1, Type.Missing, Type.Missing); }
+                ExcelCleanUp(ref range, ref xlWorkSheet, ref xlWorkBook, ref xlApp);
+            }
+            return result; 
+        }
+        private static void ExcelCleanUp(ref Microsoft.Office.Interop.Excel.Range range, ref Microsoft.Office.Interop.Excel.Worksheet xlWorkSheet, ref Microsoft.Office.Interop.Excel.Workbook xlWorkBook, ref Microsoft.Office.Interop.Excel.Application xlApp)
+        {
+            xlWorkBook.Close();
+            System.Runtime.InteropServices.Marshal.ReleaseComObject(range);
+            System.Runtime.InteropServices.Marshal.ReleaseComObject(xlWorkSheet);
+            System.Runtime.InteropServices.Marshal.ReleaseComObject(xlWorkBook);
+            System.Runtime.InteropServices.Marshal.ReleaseComObject(xlApp);
         }
         public static int IndexOfNth(this string input, string value, int startIndex, int nth)
         {
@@ -389,13 +442,18 @@ namespace Report_generator
         public static void DataTableToExcelFileWithInterop(System.Data.DataTable dt, string targetPath)//, string sheetName = "Sheet1"
         {
             if (dt == null) { MessageBox.Show("No data to export!"); return; }
-            var dialogResult = MessageBox.Show("Excel must be closed lest you lose your work progress. Continue?" , "", MessageBoxButtons.YesNo);
-            if (dialogResult == DialogResult.No) { return; }
+            //var dialogResult = MessageBox.Show("Excel must be closed lest you lose your work progress. Continue?" , "", MessageBoxButtons.YesNo);
+            //if (dialogResult == DialogResult.No) { return; }
+
+            Microsoft.Office.Interop.Excel.Application excelApp = null;
+            Microsoft.Office.Interop.Excel.Workbook excelWorkBook = null;
+            Microsoft.Office.Interop.Excel.Worksheet excelWorkSheet = null;
+            Microsoft.Office.Interop.Excel.Range excelRange = null;
 
             try
             { 
-                var excelApp = new Microsoft.Office.Interop.Excel.Application();
-                Microsoft.Office.Interop.Excel.Workbook excelWorkBook = null;
+                excelApp = new Microsoft.Office.Interop.Excel.Application();
+                
                 if (!File.Exists(targetPath))
                 {
                     excelWorkBook = excelApp.Workbooks.Add();
@@ -403,8 +461,8 @@ namespace Report_generator
                 }
                 else { excelWorkBook = excelApp.Workbooks.Open(targetPath); }
 
-                Microsoft.Office.Interop.Excel.Worksheet excelWorkSheet = excelWorkBook.Sheets[1];//(Worksheet)excelWorkBook.Sheets.Add();
-
+                excelWorkSheet = excelWorkBook.Sheets[1];//(Worksheet)excelWorkBook.Sheets.Add();
+                
                 //excelWorkSheet.Name = sheetName; //if (sheetName != "") { }
 
                 for (int i = 1; i < dt.Columns.Count + 1; i++)
@@ -419,7 +477,7 @@ namespace Report_generator
                 MessageBox.Show("Saved successfully to: " + Environment.NewLine + targetPath);
             }
             catch (Exception e) { MessageBox.Show(e.Message.ToString()); }
-            finally { KillTask("EXCEL"); }
+            finally { ExcelCleanUp(ref excelRange, ref excelWorkSheet, ref excelWorkBook, ref excelApp); }//KillTask("EXCEL"); }
         }
         //### FUNCTIONS MORGUE ####
         #region OLD public static string GetConnectionString(string filePath)

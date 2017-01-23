@@ -5,6 +5,8 @@ VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "The Extractor", "The Extractor.csproj", "{2CA9514F-1C6B-4662-9C97-F79FBE8D4643}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestingUnit", "..\TestingUnit\TestingUnit.csproj", "{42499809-B9CC-4328-836C-AC7CC1306B53}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{2CA9514F-1C6B-4662-9C97-F79FBE8D4643}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2CA9514F-1C6B-4662-9C97-F79FBE8D4643}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2CA9514F-1C6B-4662-9C97-F79FBE8D4643}.Release|Any CPU.Build.0 = Release|Any CPU
+		{42499809-B9CC-4328-836C-AC7CC1306B53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42499809-B9CC-4328-836C-AC7CC1306B53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42499809-B9CC-4328-836C-AC7CC1306B53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42499809-B9CC-4328-836C-AC7CC1306B53}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
