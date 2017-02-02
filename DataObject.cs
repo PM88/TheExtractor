@@ -20,7 +20,14 @@ namespace Report_generator
         //public string sourceExcelSheet;
 
         /* Constructor that takes one argument.*/
-        public DataObject(string newName) { Name = newName; }
+        public DataObject(string newName) 
+        { 
+            Name = newName;
+            SqlQuery = string.Empty; /* Should not be null */
+            ExcelFilePath = string.Empty;
+            ExcelFileSheet = string.Empty;
+            Description = string.Empty;
+        }
         // Method
         public void SetQueryAndDataTable(string sql, string excelFilePath)
         {

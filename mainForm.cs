@@ -63,7 +63,13 @@ namespace Report_generator
             dataObjectCollecion.Clear();
             ClearTempDB();
             dataObjectsListView.Items.Clear();
-            foreach (Control ctrl in this.Controls) { if (ctrl.Name.Length >= 7) { if (FunRepository.Right(ctrl.Name, 7) == "TextBox") { ctrl.Text = ""; } } }
+            //foreach (Control ctrl in this.Controls) { if (ctrl.Name.Length >= 7) { if (FunRepository.Right(ctrl.Name, 7) == "TextBox") { ctrl.Text = ""; } } }
+            excelFilePathTextBox.Text = "";
+            excelFileSheetsComboBox.DataSource = null;
+            excelFileSheetsComboBox.Text = "";
+            queryTextBox.Text = "";
+            descriptionDOTextBox.Text = "";
+            previewGridView.DataSource = null;
         }
         private void CheckNecessaryFiles()
         {
@@ -83,7 +89,7 @@ namespace Report_generator
         private void excelFileBrowsePathButton_Click(object sender, EventArgs e)
         {
             string workbookPath = FunRepository.BrowseFilePath("Excel Files|*.xlsx;*.xls;*.xlsm");//;*.csv
-            this.excelFilePathTextbox.Text = workbookPath;
+            this.excelFilePathTextBox.Text = workbookPath;
             if (workbookPath == "") { return; }
 
             RefreshExcelSheets(workbookPath);
@@ -95,7 +101,7 @@ namespace Report_generator
         {
             //pickup multithread for loading
             
-            string excelFilePath = this.excelFilePathTextbox.Text;
+            string excelFilePath = this.excelFilePathTextBox.Text;
 
             if (excelFilePath == "") { MessageBox.Show("File path is missing!"); return; }
             //System.Data.DataTable excelSheetDataTable;
@@ -106,7 +112,7 @@ namespace Report_generator
 
             FillPreviewGridView(excelFilePath, ref queryString);
 
-            queryTextBox.Text = queryString;
+            //queryTextBox.Text = queryString;
         }
         private void FillPreviewGridView(string excelFilePath, ref string queryString)
         {
@@ -237,7 +243,7 @@ namespace Report_generator
 
             DemSwitchez(0);
 
-            excelFilePathTextbox.Text = currentDataObject.ExcelFilePath;
+            excelFilePathTextBox.Text = currentDataObject.ExcelFilePath;
             excelFileSheetsComboBox.Text = currentDataObject.ExcelFileSheet;
             persStorageCheckBox.Checked = currentDataObject.PersStorage;
             descriptionDOTextBox.Text = currentDataObject.Description;
@@ -252,7 +258,7 @@ namespace Report_generator
             dataObjectCollecion.Remove(currentDataObjectName);
             dataObjectsListView.SelectedItems[0].Remove();
 
-            excelFilePathTextbox.Text = "";
+            excelFilePathTextBox.Text = "";
             queryTextBox.Text = "";
             descriptionDOTextBox.Text = "";
             excelFileSheetsComboBox.DataSource = null; 
@@ -273,7 +279,7 @@ namespace Report_generator
             DataObject currentDataObject = dataObjectCollecion[dataObjectsListView.SelectedItems[0].SubItems[0].Text];
             currentDataObject.DataTable = (System.Data.DataTable)previewGridView.DataSource;
             currentDataObject.SqlQuery = queryTextBox.Text;
-            currentDataObject.ExcelFilePath=excelFilePathTextbox.Text;
+            currentDataObject.ExcelFilePath=excelFilePathTextBox.Text;
             currentDataObject.ExcelFileSheet=excelFileSheetsComboBox.Text;
             currentDataObject.PersStorage = persStorageCheckBox.Checked;
             currentDataObject.Description = descriptionDOTextBox.Text;
@@ -358,6 +364,7 @@ namespace Report_generator
         private void persStorageCheckBox_CheckedChanged(object sender, EventArgs e)
         { if (persStorageCheckBox.Checked == true) { autoRunCheckBox.Enabled = true; } else { autoRunCheckBox.Enabled = false; } }
         private void resetButton_Click(object sender, EventArgs e) { ResetSettings(); }
-        private void getSheetsButton_Click(object sender, EventArgs e) { RefreshExcelSheets(this.excelFilePathTextbox.Text); }
+        private void getSheetsButton_Click(object sender, EventArgs e) { RefreshExcelSheets(this.excelFilePathTextBox.Text); }
+
     }
 }

@@ -50,6 +50,7 @@
             this.exportFromGridViewButton = new System.Windows.Forms.Button();
             this.tableRenameButton = new System.Windows.Forms.Button();
             this.dataSourceGroupBox = new System.Windows.Forms.GroupBox();
+            this.getSheetsButton = new System.Windows.Forms.Button();
             this.autoRunCheckBox = new System.Windows.Forms.CheckBox();
             this.sourceTypesGroupBox = new System.Windows.Forms.GroupBox();
             this.sourceSharePointRadioButton = new System.Windows.Forms.RadioButton();
@@ -57,7 +58,7 @@
             this.persStorageCheckBox = new System.Windows.Forms.CheckBox();
             this.excelFileSheetsComboBox = new System.Windows.Forms.ComboBox();
             this.excelFileBrowsePathButton = new System.Windows.Forms.Button();
-            this.excelFilePathTextbox = new System.Windows.Forms.TextBox();
+            this.excelFilePathTextBox = new System.Windows.Forms.TextBox();
             this.savePresetsButton = new System.Windows.Forms.Button();
             this.descriptionDOTextBox = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -66,7 +67,6 @@
             this.currentStatusLabel = new System.Windows.Forms.Label();
             this.statusLabel = new System.Windows.Forms.Label();
             this.resetButton = new System.Windows.Forms.Button();
-            this.getSheetsButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.previewGridView)).BeginInit();
             this.dataSourceGroupBox.SuspendLayout();
             this.sourceTypesGroupBox.SuspendLayout();
@@ -201,6 +201,8 @@
             this.groupBox2.Size = new System.Drawing.Size(928, 14);
             this.groupBox2.TabIndex = 34;
             this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Please make sure that Excel is closed before you run any functionality. You might" +
+    " lose your work progress.";
             // 
             // masterQueryLoadButton
             // 
@@ -290,7 +292,7 @@
             this.dataSourceGroupBox.Controls.Add(this.persStorageCheckBox);
             this.dataSourceGroupBox.Controls.Add(this.excelFileSheetsComboBox);
             this.dataSourceGroupBox.Controls.Add(this.excelFileBrowsePathButton);
-            this.dataSourceGroupBox.Controls.Add(this.excelFilePathTextbox);
+            this.dataSourceGroupBox.Controls.Add(this.excelFilePathTextBox);
             this.dataSourceGroupBox.Location = new System.Drawing.Point(291, 5);
             this.dataSourceGroupBox.Name = "dataSourceGroupBox";
             this.dataSourceGroupBox.Size = new System.Drawing.Size(649, 123);
@@ -298,6 +300,17 @@
             this.dataSourceGroupBox.TabStop = false;
             this.dataSourceGroupBox.Text = "Data source";
             this.dataSourceGroupBox.Visible = false;
+            // 
+            // getSheetsButton
+            // 
+            this.getSheetsButton.Location = new System.Drawing.Point(6, 96);
+            this.getSheetsButton.Name = "getSheetsButton";
+            this.getSheetsButton.Size = new System.Drawing.Size(75, 23);
+            this.getSheetsButton.TabIndex = 58;
+            this.getSheetsButton.Text = "Get sheets";
+            this.getSheetsButton.UseVisualStyleBackColor = true;
+            this.getSheetsButton.Visible = false;
+            this.getSheetsButton.Click += new System.EventHandler(this.getSheetsButton_Click);
             // 
             // autoRunCheckBox
             // 
@@ -382,13 +395,14 @@
             this.excelFileBrowsePathButton.Visible = false;
             this.excelFileBrowsePathButton.Click += new System.EventHandler(this.excelFileBrowsePathButton_Click);
             // 
-            // excelFilePathTextbox
+            // excelFilePathTextBox
             // 
-            this.excelFilePathTextbox.Location = new System.Drawing.Point(87, 71);
-            this.excelFilePathTextbox.Name = "excelFilePathTextbox";
-            this.excelFilePathTextbox.Size = new System.Drawing.Size(554, 20);
-            this.excelFilePathTextbox.TabIndex = 51;
-            this.excelFilePathTextbox.Visible = false;
+            this.excelFilePathTextBox.Location = new System.Drawing.Point(87, 71);
+            this.excelFilePathTextBox.Name = "excelFilePathTextBox";
+            this.excelFilePathTextBox.Size = new System.Drawing.Size(554, 20);
+            this.excelFilePathTextBox.TabIndex = 51;
+            this.excelFilePathTextBox.Visible = false;
+            //this.excelFilePathTextBox.TextChanged += new System.EventHandler(this.excelFilePathTextBox_TextChanged);
             // 
             // savePresetsButton
             // 
@@ -477,17 +491,6 @@
             this.resetButton.UseVisualStyleBackColor = false;
             this.resetButton.Click += new System.EventHandler(this.resetButton_Click);
             // 
-            // getSheetsButton
-            // 
-            this.getSheetsButton.Location = new System.Drawing.Point(6, 96);
-            this.getSheetsButton.Name = "getSheetsButton";
-            this.getSheetsButton.Size = new System.Drawing.Size(75, 23);
-            this.getSheetsButton.TabIndex = 58;
-            this.getSheetsButton.Text = "Get sheets";
-            this.getSheetsButton.UseVisualStyleBackColor = true;
-            this.getSheetsButton.Visible = false;
-            this.getSheetsButton.Click += new System.EventHandler(this.getSheetsButton_Click);
-            // 
             // mainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -558,7 +561,7 @@
         private System.Windows.Forms.CheckBox persStorageCheckBox;
         private System.Windows.Forms.ComboBox excelFileSheetsComboBox;
         private System.Windows.Forms.Button excelFileBrowsePathButton;
-        private System.Windows.Forms.TextBox excelFilePathTextbox;
+        private System.Windows.Forms.TextBox excelFilePathTextBox;
         private System.Windows.Forms.GroupBox sourceTypesGroupBox;
         private System.Windows.Forms.RadioButton sourceSharePointRadioButton;
         private System.Windows.Forms.RadioButton sourceExcelRadioButton;

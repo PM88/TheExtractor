@@ -105,7 +105,6 @@ namespace Report_generator
         {
             string marker = @"`";
             int countMarkers = queryString.Length - queryString.Replace(marker, "").Length;
-            if (countMarkers == 0 || countMarkers % 2 != 0) { return; }
 
             string customSqlFunction = string.Empty;
             //string customSqlFunctionType = string.Empty;
@@ -119,32 +118,32 @@ namespace Report_generator
             string excelAddress = string.Empty;
             string customSqlFunctionNoMarkers = string.Empty; //Find way to avoid additional var
 
-            for(int i = 2; i <= countMarkers; i = i + 2)
-            { 
+            while(countMarkers > 0 && countMarkers % 2 == 0)
+            {
                 int markerStartIndex = queryString.IndexOf(marker);
                 int markerEndIndex = IndexOfNth(queryString, marker, 0, 2);
-                if (markerStartIndex == 0 || markerEndIndex == 0) { return; }
 
-                customSqlFunction = queryString.Substring(markerStartIndex, markerEndIndex - markerStartIndex);
-                customSqlFunctionNoMarkers = queryString.Substring(markerStartIndex + 1, markerEndIndex - markerStartIndex - 1);
-                if (customSqlFunction.Contains("CurReg")) 
+                customSqlFunction = queryString.Substring(markerStartIndex, markerEndIndex - markerStartIndex + 1);
+                customSqlFunctionNoMarkers = customSqlFunction.Replace(@"`", ""); //= queryString.Substring(markerStartIndex + 1, markerEndIndex - markerStartIndex - 1);
+
+                if (customSqlFunction.Contains("CurReg"))
                 {
                     customSqlFunctionValue = customSqlFunctionNoMarkers.Remove(0, 6);
                     //columnsNames = columnsNames.Remove(columnsNames.Length - 2);
                     currString = queryString.Remove(markerStartIndex);
-                    while(currChar != "[")
+                    while (currChar != "[")
                     {
                         currCharIndex = currString.Length - 1;
-                        currString = currString.Remove(currCharIndex); 
-                        currChar = currString[currString.Length - 1].ToString(); 
+                        currString = currString.Remove(currCharIndex);
+                        currChar = currString[currString.Length - 1].ToString();
                     }
                     excelFileSheet = queryString.Substring(currCharIndex, markerStartIndex - currCharIndex - 1); /* Minus one is to offset the $ */
+                    //ExcelInteropCleanUp(false); /* To avoid unidentified error */
                     excelAddress = GetExcelCurRegionWithInterop(customSqlFunctionValue, excelFilePath, excelFileSheet);
-                    queryString.Replace(customSqlFunction, excelAddress);
                 }
 
-                //indexStart = indexStart + 2;
-                //indexEnd = indexEnd + 2;
+                queryString = queryString.Replace(customSqlFunction, excelAddress);
+                countMarkers = queryString.Length - queryString.Replace(marker, "").Length;
             }
         }
         public static string GetExcelCurRegionWithInterop(string addressStart, string excelFilePath, string excelFileSheet) 
@@ -156,27 +155,47 @@ namespace Report_generator
             Microsoft.Office.Interop.Excel.Worksheet xlWorkSheet = null;
             Microsoft.Office.Interop.Excel.Range range = null;
             string result = string.Empty;
+            int addressSeparatorLocation;
+
             try 
             {
                 xlWorkBook = xlApp.Workbooks.Open(excelFilePath);//@"d:\csharp-Excel.xls", 0, true, 5, "", "", true, Microsoft.Office.Interop.Excel.XlPlatform.xlWindows, "\t", false, false, 0, true, 1, 0);
-                xlWorkSheet = xlWorkBook.Worksheets.get_Item(excelFileSheet);//(Worksheet)
-                range = xlWorkSheet.get_Range(addressStart, Type.Missing).CurrentRegion;
+                xlWorkSheet = xlWorkBook.Worksheets[excelFileSheet];//xlWorkBook.Worksheets.get_Item(excelFileSheet);//(Worksheet)
+                xlWorkSheet.Unprotect("pass"); /* Temporary workaround - this is a default password */
+                range = xlWorkSheet.Range[addressStart].CurrentRegion;//get_Range(addressStart, Type.Missing).CurrentRegion;
             }
+            //catch (System.Runtime.InteropServices.COMException ce) { MessageBox.Show(ce.Message); }
             finally
             {
                 //pickup filling result to try; test closing w/o opening; move the excel dispose method to live; check replacing in test unit
-                if (range != null) { result = range.get_AddressLocal(true, true, XlReferenceStyle.xlA1, Type.Missing, Type.Missing); }
-                ExcelCleanUp(ref range, ref xlWorkSheet, ref xlWorkBook, ref xlApp);
+                if (range != null) 
+                {
+                    result = range.get_AddressLocal(true, true, XlReferenceStyle.xlA1, Type.Missing, Type.Missing);
+                    result = result.Replace(@"$", "");
+                    addressSeparatorLocation = result.IndexOf(@":", 0);
+                    result = result.Replace(result.Remove(addressSeparatorLocation, result.Length - addressSeparatorLocation), addressStart);
+                }
+                ExcelInteropCleanUp(false);//ref range, ref xlWorkSheet, ref xlWorkBook, ref xlApp);
             }
             return result; 
         }
-        private static void ExcelCleanUp(ref Microsoft.Office.Interop.Excel.Range range, ref Microsoft.Office.Interop.Excel.Worksheet xlWorkSheet, ref Microsoft.Office.Interop.Excel.Workbook xlWorkBook, ref Microsoft.Office.Interop.Excel.Application xlApp)
+        private static void ExcelInteropCleanUp(bool ask)//ref Microsoft.Office.Interop.Excel.Range range, ref Microsoft.Office.Interop.Excel.Worksheet xlWorkSheet, ref Microsoft.Office.Interop.Excel.Workbook xlWorkBook, ref Microsoft.Office.Interop.Excel.Application xlApp)
         {
-            xlWorkBook.Close();
-            System.Runtime.InteropServices.Marshal.ReleaseComObject(range);
-            System.Runtime.InteropServices.Marshal.ReleaseComObject(xlWorkSheet);
-            System.Runtime.InteropServices.Marshal.ReleaseComObject(xlWorkBook);
-            System.Runtime.InteropServices.Marshal.ReleaseComObject(xlApp);
+            KillTask("EXCEL", ask);
+            /* Unfortunately the below solution is unpredictable and it often leaves garbage. At some point I will experiment with a different library (ExcelLibrary) */
+
+            //if (xlApp == null || xlWorkBook == null) { return; } /* We assume that if you use Interop, you work on an Excel file */
+             
+            //bool isOpened = true;
+            //try { xlApp.Workbooks.get_Item(xlWorkBook.FullName); }
+            //catch (Exception) { isOpened = false; }
+            //if (isOpened) { xlWorkBook.Close(); }
+
+            ///* The below order of disposing needs to be kept */
+            //if (range != null) { System.Runtime.InteropServices.Marshal.ReleaseComObject(range); }
+            //if (xlWorkSheet != null) { System.Runtime.InteropServices.Marshal.ReleaseComObject(xlWorkSheet); }
+            //System.Runtime.InteropServices.Marshal.ReleaseComObject(xlWorkBook);
+            //System.Runtime.InteropServices.Marshal.ReleaseComObject(xlApp);
         }
         public static int IndexOfNth(this string input, string value, int startIndex, int nth)
         {
@@ -195,8 +214,9 @@ namespace Report_generator
             var dataTable = new System.Data.DataTable();
             try
             {
-            var dataAdapter = new System.Data.OleDb.OleDbDataAdapter(queryString, fileConnection);
-            dataAdapter.Fill(dataTable); }
+                var dataAdapter = new System.Data.OleDb.OleDbDataAdapter(queryString, fileConnection);
+                dataAdapter.Fill(dataTable); 
+            }
             catch (Exception e) { MessageBox.Show(e.Message.ToString()); } //"Connection failed. Check the SQL query."
             finally { fileConnection.Close(); }
 
@@ -277,8 +297,14 @@ namespace Report_generator
 
             if (ofd.ShowDialog() == DialogResult.OK) { return ofd.FileName; } else { return ""; }
         }
-        public static void KillTask(string ProcessesName)
+        public static void KillTask(string ProcessesName, bool askUser = false)
         {
+            if (askUser) 
+            {
+                var dialogResult = MessageBox.Show(ProcessesName + " must be closed lest you lose your work progress. Continue?", "", MessageBoxButtons.YesNo);
+                if (dialogResult == DialogResult.No) { return; }
+            }
+
             /*Kill the all process obj from the Task Manager(Process)*/
             System.Diagnostics.Process[] objProcesses = System.Diagnostics.Process.GetProcessesByName(ProcessesName);
 
@@ -442,27 +468,27 @@ namespace Report_generator
         public static void DataTableToExcelFileWithInterop(System.Data.DataTable dt, string targetPath)//, string sheetName = "Sheet1"
         {
             if (dt == null) { MessageBox.Show("No data to export!"); return; }
-            //var dialogResult = MessageBox.Show("Excel must be closed lest you lose your work progress. Continue?" , "", MessageBoxButtons.YesNo);
-            //if (dialogResult == DialogResult.No) { return; }
+            var dialogResult = MessageBox.Show("Excel must be closed lest you lose your work progress. Continue?", "", MessageBoxButtons.YesNo);
+            if (dialogResult == DialogResult.No) { return; }
 
             Microsoft.Office.Interop.Excel.Application excelApp = null;
             Microsoft.Office.Interop.Excel.Workbook excelWorkBook = null;
             Microsoft.Office.Interop.Excel.Worksheet excelWorkSheet = null;
-            Microsoft.Office.Interop.Excel.Range excelRange = null;
+            //Microsoft.Office.Interop.Excel.Range excelRange = null;
 
             try
-            { 
+            {
                 excelApp = new Microsoft.Office.Interop.Excel.Application();
-                
+
                 if (!File.Exists(targetPath))
                 {
                     excelWorkBook = excelApp.Workbooks.Add();
-                    excelWorkBook.SaveAs(targetPath,XlFileFormat.xlWorkbookNormal);
+                    excelWorkBook.SaveAs(targetPath, XlFileFormat.xlWorkbookNormal);
                 }
                 else { excelWorkBook = excelApp.Workbooks.Open(targetPath); }
 
                 excelWorkSheet = excelWorkBook.Sheets[1];//(Worksheet)excelWorkBook.Sheets.Add();
-                
+
                 //excelWorkSheet.Name = sheetName; //if (sheetName != "") { }
 
                 for (int i = 1; i < dt.Columns.Count + 1; i++)
@@ -477,7 +503,7 @@ namespace Report_generator
                 MessageBox.Show("Saved successfully to: " + Environment.NewLine + targetPath);
             }
             catch (Exception e) { MessageBox.Show(e.Message.ToString()); }
-            finally { ExcelCleanUp(ref excelRange, ref excelWorkSheet, ref excelWorkBook, ref excelApp); }//KillTask("EXCEL"); }
+            finally { ExcelInteropCleanUp(false); }//ref excelRange, ref excelWorkSheet, ref excelWorkBook, ref excelApp); }//KillTask("EXCEL"); }
         }
         //### FUNCTIONS MORGUE ####
         #region OLD public static string GetConnectionString(string filePath)
