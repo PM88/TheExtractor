@@ -16,6 +16,7 @@ namespace Report_generator
         public bool PersStorage;
         public string Description;
         public bool RunLoad;
+        public string Password;
         //public string sourceAddress;
         //public string sourceExcelSheet;
 
@@ -33,6 +34,21 @@ namespace Report_generator
         {
             SqlQuery = sql;
             DataTable = FunRepository.GetDataTable(FunRepository.GetConnectionString(excelFilePath), sql);
+        }
+        public DataObject CloneMe(string cloneName)
+        {
+            var newClone = new DataObject(cloneName);
+            newClone.Name = Name; 
+            newClone.SqlQuery = SqlQuery;
+            newClone.DataTable = DataTable;
+            newClone.ExcelFilePath = ExcelFilePath;
+            newClone.ExcelFileSheet = ExcelFileSheet;
+            newClone.PersStorage = PersStorage;
+            newClone.Description = Description;
+            newClone.RunLoad = RunLoad;
+            newClone.Password = Password;
+
+            return newClone;
         }
     }
 }

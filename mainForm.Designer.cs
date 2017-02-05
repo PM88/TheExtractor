@@ -34,7 +34,6 @@
             this.queryLoadButton = new System.Windows.Forms.Button();
             this.dataObjectsListView = new System.Windows.Forms.ListView();
             this.columnHeaderDataObject = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.label3 = new System.Windows.Forms.Label();
             this.tableAddButton = new System.Windows.Forms.Button();
             this.tableDeleteButton = new System.Windows.Forms.Button();
             this.masterButton = new System.Windows.Forms.Button();
@@ -67,6 +66,11 @@
             this.currentStatusLabel = new System.Windows.Forms.Label();
             this.statusLabel = new System.Windows.Forms.Label();
             this.resetButton = new System.Windows.Forms.Button();
+            this.tableCloneButton = new System.Windows.Forms.Button();
+            this.tableUpButton = new System.Windows.Forms.Button();
+            this.tableDownButton = new System.Windows.Forms.Button();
+            this.label1 = new System.Windows.Forms.Label();
+            this.sourcePasswordTextBox = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.previewGridView)).BeginInit();
             this.dataSourceGroupBox.SuspendLayout();
             this.sourceTypesGroupBox.SuspendLayout();
@@ -117,10 +121,10 @@
             this.columnHeaderDataObject});
             this.dataObjectsListView.FullRowSelect = true;
             this.dataObjectsListView.HideSelection = false;
-            this.dataObjectsListView.Location = new System.Drawing.Point(88, 170);
+            this.dataObjectsListView.Location = new System.Drawing.Point(79, 145);
             this.dataObjectsListView.MultiSelect = false;
             this.dataObjectsListView.Name = "dataObjectsListView";
-            this.dataObjectsListView.Size = new System.Drawing.Size(180, 101);
+            this.dataObjectsListView.Size = new System.Drawing.Size(189, 126);
             this.dataObjectsListView.TabIndex = 27;
             this.dataObjectsListView.UseCompatibleStateImageBehavior = false;
             this.dataObjectsListView.View = System.Windows.Forms.View.Details;
@@ -129,21 +133,11 @@
             // columnHeaderDataObject
             // 
             this.columnHeaderDataObject.Text = "Data objects";
-            this.columnHeaderDataObject.Width = 176;
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.Location = new System.Drawing.Point(16, 142);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(132, 25);
-            this.label3.TabIndex = 28;
-            this.label3.Text = "Data objects";
+            this.columnHeaderDataObject.Width = 185;
             // 
             // tableAddButton
             // 
-            this.tableAddButton.Location = new System.Drawing.Point(21, 170);
+            this.tableAddButton.Location = new System.Drawing.Point(12, 144);
             this.tableAddButton.Name = "tableAddButton";
             this.tableAddButton.Size = new System.Drawing.Size(61, 21);
             this.tableAddButton.TabIndex = 29;
@@ -153,7 +147,7 @@
             // 
             // tableDeleteButton
             // 
-            this.tableDeleteButton.Location = new System.Drawing.Point(21, 251);
+            this.tableDeleteButton.Location = new System.Drawing.Point(12, 207);
             this.tableDeleteButton.Name = "tableDeleteButton";
             this.tableDeleteButton.Size = new System.Drawing.Size(61, 21);
             this.tableDeleteButton.TabIndex = 31;
@@ -227,7 +221,7 @@
             // 
             // tableEditButton
             // 
-            this.tableEditButton.Location = new System.Drawing.Point(21, 197);
+            this.tableEditButton.Location = new System.Drawing.Point(12, 165);
             this.tableEditButton.Name = "tableEditButton";
             this.tableEditButton.Size = new System.Drawing.Size(61, 21);
             this.tableEditButton.TabIndex = 38;
@@ -276,7 +270,7 @@
             // 
             // tableRenameButton
             // 
-            this.tableRenameButton.Location = new System.Drawing.Point(21, 224);
+            this.tableRenameButton.Location = new System.Drawing.Point(12, 186);
             this.tableRenameButton.Name = "tableRenameButton";
             this.tableRenameButton.Size = new System.Drawing.Size(61, 21);
             this.tableRenameButton.TabIndex = 47;
@@ -286,6 +280,8 @@
             // 
             // dataSourceGroupBox
             // 
+            this.dataSourceGroupBox.Controls.Add(this.sourcePasswordTextBox);
+            this.dataSourceGroupBox.Controls.Add(this.label1);
             this.dataSourceGroupBox.Controls.Add(this.getSheetsButton);
             this.dataSourceGroupBox.Controls.Add(this.autoRunCheckBox);
             this.dataSourceGroupBox.Controls.Add(this.sourceTypesGroupBox);
@@ -315,8 +311,7 @@
             // autoRunCheckBox
             // 
             this.autoRunCheckBox.AutoSize = true;
-            this.autoRunCheckBox.Enabled = false;
-            this.autoRunCheckBox.Location = new System.Drawing.Point(502, 98);
+            this.autoRunCheckBox.Location = new System.Drawing.Point(211, 35);
             this.autoRunCheckBox.Name = "autoRunCheckBox";
             this.autoRunCheckBox.Size = new System.Drawing.Size(84, 17);
             this.autoRunCheckBox.TabIndex = 57;
@@ -364,7 +359,7 @@
             // persStorageCheckBox
             // 
             this.persStorageCheckBox.AutoSize = true;
-            this.persStorageCheckBox.Location = new System.Drawing.Point(371, 98);
+            this.persStorageCheckBox.Location = new System.Drawing.Point(531, 100);
             this.persStorageCheckBox.Name = "persStorageCheckBox";
             this.persStorageCheckBox.Size = new System.Drawing.Size(110, 17);
             this.persStorageCheckBox.TabIndex = 55;
@@ -380,7 +375,7 @@
             this.excelFileSheetsComboBox.FormattingEnabled = true;
             this.excelFileSheetsComboBox.Location = new System.Drawing.Point(87, 98);
             this.excelFileSheetsComboBox.Name = "excelFileSheetsComboBox";
-            this.excelFileSheetsComboBox.Size = new System.Drawing.Size(278, 21);
+            this.excelFileSheetsComboBox.Size = new System.Drawing.Size(438, 21);
             this.excelFileSheetsComboBox.TabIndex = 53;
             this.excelFileSheetsComboBox.Visible = false;
             // 
@@ -402,7 +397,6 @@
             this.excelFilePathTextBox.Size = new System.Drawing.Size(554, 20);
             this.excelFilePathTextBox.TabIndex = 51;
             this.excelFilePathTextBox.Visible = false;
-            //this.excelFilePathTextBox.TextChanged += new System.EventHandler(this.excelFilePathTextBox_TextChanged);
             // 
             // savePresetsButton
             // 
@@ -491,12 +485,62 @@
             this.resetButton.UseVisualStyleBackColor = false;
             this.resetButton.Click += new System.EventHandler(this.resetButton_Click);
             // 
+            // tableCloneButton
+            // 
+            this.tableCloneButton.Location = new System.Drawing.Point(12, 229);
+            this.tableCloneButton.Name = "tableCloneButton";
+            this.tableCloneButton.Size = new System.Drawing.Size(61, 21);
+            this.tableCloneButton.TabIndex = 63;
+            this.tableCloneButton.Text = "CLONE";
+            this.tableCloneButton.UseVisualStyleBackColor = true;
+            this.tableCloneButton.Click += new System.EventHandler(this.tableCloneButton_Click);
+            // 
+            // tableUpButton
+            // 
+            this.tableUpButton.Location = new System.Drawing.Point(12, 250);
+            this.tableUpButton.Name = "tableUpButton";
+            this.tableUpButton.Size = new System.Drawing.Size(31, 21);
+            this.tableUpButton.TabIndex = 64;
+            this.tableUpButton.Text = "/\\";
+            this.tableUpButton.UseVisualStyleBackColor = true;
+            this.tableUpButton.Click += new System.EventHandler(this.tableUpButton_Click);
+            // 
+            // tableDownButton
+            // 
+            this.tableDownButton.Location = new System.Drawing.Point(42, 250);
+            this.tableDownButton.Name = "tableDownButton";
+            this.tableDownButton.Size = new System.Drawing.Size(31, 21);
+            this.tableDownButton.TabIndex = 65;
+            this.tableDownButton.Text = "\\/";
+            this.tableDownButton.UseVisualStyleBackColor = true;
+            this.tableDownButton.Click += new System.EventHandler(this.tableDownButton_Click);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(329, 35);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(53, 13);
+            this.label1.TabIndex = 60;
+            this.label1.Text = "Password";
+            // 
+            // sourcePasswordTextBox
+            // 
+            this.sourcePasswordTextBox.BackColor = System.Drawing.SystemColors.Window;
+            this.sourcePasswordTextBox.Location = new System.Drawing.Point(386, 32);
+            this.sourcePasswordTextBox.Name = "sourcePasswordTextBox";
+            this.sourcePasswordTextBox.Size = new System.Drawing.Size(188, 20);
+            this.sourcePasswordTextBox.TabIndex = 63;
+            // 
             // mainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(952, 618);
             this.ControlBox = false;
+            this.Controls.Add(this.tableDownButton);
+            this.Controls.Add(this.tableUpButton);
+            this.Controls.Add(this.tableCloneButton);
             this.Controls.Add(this.resetButton);
             this.Controls.Add(this.dataSourceGroupBox);
             this.Controls.Add(this.dataObjectGroupBox);
@@ -513,7 +557,6 @@
             this.Controls.Add(this.masterButton);
             this.Controls.Add(this.tableDeleteButton);
             this.Controls.Add(this.tableAddButton);
-            this.Controls.Add(this.label3);
             this.Controls.Add(this.dataObjectsListView);
             this.Controls.Add(this.flexiLabel);
             this.Controls.Add(this.previewGridView);
@@ -541,7 +584,6 @@
         private System.Windows.Forms.DataGridView previewGridView;
         private System.Windows.Forms.Button queryLoadButton;
         private System.Windows.Forms.ListView dataObjectsListView;
-        private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button tableAddButton;
         private System.Windows.Forms.Button tableDeleteButton;
         private System.Windows.Forms.Button masterButton;
@@ -575,6 +617,11 @@
         private System.Windows.Forms.CheckBox autoRunCheckBox;
         private System.Windows.Forms.Button resetButton;
         private System.Windows.Forms.Button getSheetsButton;
+        private System.Windows.Forms.Button tableCloneButton;
+        private System.Windows.Forms.Button tableUpButton;
+        private System.Windows.Forms.Button tableDownButton;
+        private System.Windows.Forms.TextBox sourcePasswordTextBox;
+        private System.Windows.Forms.Label label1;
     }
 }
 

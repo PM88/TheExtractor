@@ -43,6 +43,7 @@ namespace Report_generator
                     sw.WriteLine("Data_Object" + separatorDO + currentDO.Name + separatorDO + "Persistent_storage = " + currentDO.PersStorage);
                 }
                 if (currentDO.RunLoad) { sw.WriteLine("Data_Object" + separatorDO + currentDO.Name + separatorDO + "Run_on_load = " + currentDO.RunLoad); }
+                if (currentDO.Password != "") { sw.WriteLine("Data_Object" + separatorDO + currentDO.Name + separatorDO + "Password = " + currentDO.Password); }
             }
             sw.Close();
             MessageBox.Show("Successfully saved the presets.");
@@ -92,6 +93,7 @@ namespace Report_generator
                                     case "Source_table": currentDataObject.ExcelFileSheet = presetValue; break;
                                     case "Persistent_storage": currentDataObject.PersStorage = true; break;
                                     case "Run_on_load": currentDataObject.RunLoad = true; break;
+                                    case "Password": currentDataObject.Password = presetValue; break;
                                 }
                             } break;
                     }
@@ -101,7 +103,7 @@ namespace Report_generator
             }
             catch { MessageBox.Show("The presets file is corrupted! Please restart the application."); return; }
         }
-        public static void SetCustomSqlFunctions(ref string queryString, string excelFilePath)
+        public static void SetCustomSqlFunctions(ref string queryString, string excelFilePath, string password = "")
         {
             string marker = @"`";
             int countMarkers = queryString.Length - queryString.Replace(marker, "").Length;
@@ -139,14 +141,14 @@ namespace Report_generator
                     }
                     excelFileSheet = queryString.Substring(currCharIndex, markerStartIndex - currCharIndex - 1); /* Minus one is to offset the $ */
                     //ExcelInteropCleanUp(false); /* To avoid unidentified error */
-                    excelAddress = GetExcelCurRegionWithInterop(customSqlFunctionValue, excelFilePath, excelFileSheet);
+                    excelAddress = GetExcelCurRegionWithInterop(customSqlFunctionValue, excelFilePath, excelFileSheet, password);
                 }
 
                 queryString = queryString.Replace(customSqlFunction, excelAddress);
                 countMarkers = queryString.Length - queryString.Replace(marker, "").Length;
             }
         }
-        public static string GetExcelCurRegionWithInterop(string addressStart, string excelFilePath, string excelFileSheet) 
+        public static string GetExcelCurRegionWithInterop(string addressStart, string excelFilePath, string excelFileSheet, string password = "") 
         {
             //var excelApp = new Microsoft.Office.Interop.Excel.Application();
             //var excelRange = excelApp.Workbooks(excelFilePath)
@@ -161,7 +163,7 @@ namespace Report_generator
             {
                 xlWorkBook = xlApp.Workbooks.Open(excelFilePath);//@"d:\csharp-Excel.xls", 0, true, 5, "", "", true, Microsoft.Office.Interop.Excel.XlPlatform.xlWindows, "\t", false, false, 0, true, 1, 0);
                 xlWorkSheet = xlWorkBook.Worksheets[excelFileSheet];//xlWorkBook.Worksheets.get_Item(excelFileSheet);//(Worksheet)
-                xlWorkSheet.Unprotect("pass"); /* Temporary workaround - this is a default password */
+                xlWorkSheet.Unprotect(password); //pass
                 range = xlWorkSheet.Range[addressStart].CurrentRegion;//get_Range(addressStart, Type.Missing).CurrentRegion;
             }
             //catch (System.Runtime.InteropServices.COMException ce) { MessageBox.Show(ce.Message); }

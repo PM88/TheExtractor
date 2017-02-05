@@ -18,7 +18,7 @@ namespace Report_generator
 {
     public partial class mainForm : Form
     {
-        public const string appVersion = "2.0.0.0";
+        public const string appVersion = "2.0.1.0";
         //public ADOX.Catalog storageDbCatalog;
         public Dictionary<string, DataObject> dataObjectCollecion;
         public string currentFolder;
@@ -43,7 +43,6 @@ namespace Report_generator
             Extracting,
             Downloading
         }
-
         public mainForm() 
         { 
             InitializeComponent();
@@ -118,7 +117,7 @@ namespace Report_generator
         {
             System.Data.DataTable excelSheetDataTable;
             string excelFileConnectionString = FunRepository.GetConnectionString(excelFilePath);
-            FunRepository.SetCustomSqlFunctions(ref queryString, excelFilePath);
+            FunRepository.SetCustomSqlFunctions(ref queryString, excelFilePath, sourcePasswordTextBox.Text);
             excelSheetDataTable = FunRepository.GetDataTable(excelFileConnectionString, queryString);
             try { this.previewGridView.DataSource = excelSheetDataTable; } catch { }
             UpdateTotalRecords(excelSheetDataTable);
@@ -139,8 +138,8 @@ namespace Report_generator
             { storageDbCatalog.Tables.Delete(currentTableName); }
             tempDBConnection.Close();
         }
-        private void masterButton_Click(object sender, EventArgs e) { DemSwitchez(2,"Master report"); }
-        private void DemSwitchez(int switchCode, string flexiLabelText = "")
+        private void masterButton_Click(object sender, EventArgs e) { SwitchToggle(2,"Master report"); }
+        private void SwitchToggle(int switchCode, string flexiLabelText = "")
         {
             /*Upper-right controls should be visible/hidden depending on context*/
             if (flexiLabelText == "") { flexiLabelText = flexiLabel.Text; }
@@ -227,26 +226,28 @@ namespace Report_generator
             finally { con.Dispose(); tempDBConnection.Close() ; storageDbCatalog = null; } 
         }
         private void dataObjectsListView_SelectedIndexChanged(object sender, EventArgs e) { PreviewMode(); }
-        //private void dataObjectsListView_MouseUp(object sender, MouseEventArgs e) /* Not working at the moment */
-        //{ if (e.Button == MouseButtons.Right) { } }
+        //private void dataObjectsListView_MouseClick(object sender, MouseEventArgs e) /* Not working at the moment */
+        //{ if (e.Button == MouseButtons.Right) { MessageBox.Show("yo"); } }
         private void PreviewMode()
         {
             //queryLoadButton.Enabled = false;
             //queryTextBox.Enabled = false;
             //saveDataObjectButton.Visible = false;
             foreach (Control ctrl in dataObjectGroupBox.Controls) { ctrl.Enabled = false; }
-
+            SwitchToggle(0);
             if (dataObjectsListView.SelectedItems.Count == 0) { return; }
+
             DataObject currentDataObject = dataObjectCollecion[dataObjectsListView.SelectedItems[0].SubItems[0].Text];
             try { previewGridView.DataSource = currentDataObject.DataTable; } catch { }
             queryTextBox.Text = currentDataObject.SqlQuery;
 
-            DemSwitchez(0);
-
+            //DemSwitchez(0);
             excelFilePathTextBox.Text = currentDataObject.ExcelFilePath;
             excelFileSheetsComboBox.Text = currentDataObject.ExcelFileSheet;
             persStorageCheckBox.Checked = currentDataObject.PersStorage;
             descriptionDOTextBox.Text = currentDataObject.Description;
+            autoRunCheckBox.Checked = currentDataObject.RunLoad;
+            sourcePasswordTextBox.Text = currentDataObject.Password;
 
             UpdateTotalRecords(currentDataObject.DataTable);
         }
@@ -264,7 +265,7 @@ namespace Report_generator
             excelFileSheetsComboBox.DataSource = null; 
             excelFileSheetsComboBox.Items.Clear();
             this.previewGridView.DataSource = null; 
-            DemSwitchez(99);
+            SwitchToggle(99);
             UpdateTotalRecords();
         }
         private void tableEditButton_Click(object sender, EventArgs e) { EditMode(); }
@@ -272,7 +273,7 @@ namespace Report_generator
         {
             if (dataObjectsListView.SelectedItems.Count == 0) { return; }
             foreach (Control ctrl in dataObjectGroupBox.Controls) { ctrl.Enabled = true; }
-            DemSwitchez(1,"Choose the source file and sheet");
+            SwitchToggle(1,"Choose the source file and sheet");
         }
         private void saveDataObjectButton_Click(object sender, EventArgs e)
         {
@@ -284,6 +285,7 @@ namespace Report_generator
             currentDataObject.PersStorage = persStorageCheckBox.Checked;
             currentDataObject.Description = descriptionDOTextBox.Text;
             currentDataObject.RunLoad = autoRunCheckBox.Checked;
+            currentDataObject.Password = sourcePasswordTextBox.Text;
             MessageBox.Show("Saved successfully.");
         }
         private void exportFromGridViewButton_Click(object sender, EventArgs e)
@@ -305,7 +307,7 @@ namespace Report_generator
             string[] nameArray = new string[] { newDataSourceName };
             AddDataObjectsNamesToListView(nameArray);
 
-            DemSwitchez(1, "Choose the source file and sheet");
+            SwitchToggle(1, "Choose the source file and sheet");
             EditMode();
         }
         private void AddDataObjectsNamesToListView(string[] newDataSourceNames)
@@ -365,6 +367,53 @@ namespace Report_generator
         { if (persStorageCheckBox.Checked == true) { autoRunCheckBox.Enabled = true; } else { autoRunCheckBox.Enabled = false; } }
         private void resetButton_Click(object sender, EventArgs e) { ResetSettings(); }
         private void getSheetsButton_Click(object sender, EventArgs e) { RefreshExcelSheets(this.excelFilePathTextBox.Text); }
+        private void tableCloneButton_Click(object sender, EventArgs e)
+        {
+            if (dataObjectsListView.SelectedItems.Count == 0) { return; }
 
+            string newDataSourceName = FunRepository.SummonInputBox("Provide name of the new (clone) data source.", "Enter clone name");
+            if (!(CheckDataSourceName(ref newDataSourceName))) { return; }
+
+            DataObject newDataObject = dataObjectCollecion[dataObjectsListView.SelectedItems[0].SubItems[0].Text].CloneMe(newDataSourceName); //new DataObject(newDataSourceName);
+            newDataObject.Name = newDataSourceName;
+
+            dataObjectCollecion.Add(newDataSourceName, newDataObject);
+
+            string[] nameArray = new string[] { newDataSourceName };
+            AddDataObjectsNamesToListView(nameArray);
+
+            SwitchToggle(1, "Choose the source file and sheet");
+            EditMode();
+
+            UpdateTotalRecords();
+        }
+        private void tableUpButton_Click(object sender, EventArgs e) { MoveDataObjectInList("up"); }
+        private void tableDownButton_Click(object sender, EventArgs e) { MoveDataObjectInList("down"); }
+
+        private void MoveDataObjectInList(string direction)
+        {
+            if (dataObjectsListView.SelectedItems.Count == 0) { return; }
+
+            int finalItemIndex = 0;
+            int currentIndex = dataObjectsListView.SelectedItems[0].Index;
+            int replaceIndex = 0;
+            switch(direction)
+            {
+                case "up": finalItemIndex = 0; replaceIndex = currentIndex - 1; break;
+                case "down": finalItemIndex = dataObjectsListView.Items.Count - 1; replaceIndex = currentIndex + 1; break;
+            }
+            if (currentIndex == finalItemIndex) { return; }
+
+            ListViewItem currentDataObjectItem = dataObjectsListView.SelectedItems[0];
+            ListViewItem replacedDataObjectItem = dataObjectsListView.Items[replaceIndex];
+
+            string currentDataObjectName = currentDataObjectItem.Text;//SubItems[0].
+            string replacedDataObjectName = replacedDataObjectItem.Text;
+
+            currentDataObjectItem.Text = replacedDataObjectName;
+            replacedDataObjectItem.Text = currentDataObjectName;
+
+            replacedDataObjectItem.Selected = true;
+        }
     }
 }
