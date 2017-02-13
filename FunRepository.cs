@@ -17,7 +17,7 @@ using Microsoft.Office.Interop.Excel;
 
 namespace Report_generator
 {
-    public static class FunRepository //ver200117
+    public static class FunRepository //ver130217
     {
         public static string queryString;
         public static string connectionStringExcel;
@@ -506,6 +506,10 @@ namespace Report_generator
             }
             catch (Exception e) { MessageBox.Show(e.Message.ToString()); }
             finally { ExcelInteropCleanUp(false); }//ref excelRange, ref excelWorkSheet, ref excelWorkBook, ref excelApp); }//KillTask("EXCEL"); }
+        }
+        public static void DataTableToAccess(System.Data.DataTable dt, string targetPath)
+        {
+
         }
         //### FUNCTIONS MORGUE ####
         #region OLD public static string GetConnectionString(string filePath)

@@ -1,6 +1,6 @@
 ﻿namespace Report_generator
 {
-    partial class mainForm
+    partial class MainForm
     {
         /// <summary>
         /// Required designer variable.
@@ -49,6 +49,8 @@
             this.exportFromGridViewButton = new System.Windows.Forms.Button();
             this.tableRenameButton = new System.Windows.Forms.Button();
             this.dataSourceGroupBox = new System.Windows.Forms.GroupBox();
+            this.sourcePasswordTextBox = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.getSheetsButton = new System.Windows.Forms.Button();
             this.autoRunCheckBox = new System.Windows.Forms.CheckBox();
             this.sourceTypesGroupBox = new System.Windows.Forms.GroupBox();
@@ -69,8 +71,7 @@
             this.tableCloneButton = new System.Windows.Forms.Button();
             this.tableUpButton = new System.Windows.Forms.Button();
             this.tableDownButton = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
-            this.sourcePasswordTextBox = new System.Windows.Forms.TextBox();
+            this.exportFromGridViewToDbButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.previewGridView)).BeginInit();
             this.dataSourceGroupBox.SuspendLayout();
             this.sourceTypesGroupBox.SuspendLayout();
@@ -264,7 +265,7 @@
             this.exportFromGridViewButton.Name = "exportFromGridViewButton";
             this.exportFromGridViewButton.Size = new System.Drawing.Size(89, 20);
             this.exportFromGridViewButton.TabIndex = 46;
-            this.exportFromGridViewButton.Text = "Export data";
+            this.exportFromGridViewButton.Text = "Export to xls";
             this.exportFromGridViewButton.UseVisualStyleBackColor = true;
             this.exportFromGridViewButton.Click += new System.EventHandler(this.exportFromGridViewButton_Click);
             // 
@@ -296,6 +297,23 @@
             this.dataSourceGroupBox.TabStop = false;
             this.dataSourceGroupBox.Text = "Data source";
             this.dataSourceGroupBox.Visible = false;
+            // 
+            // sourcePasswordTextBox
+            // 
+            this.sourcePasswordTextBox.BackColor = System.Drawing.SystemColors.Window;
+            this.sourcePasswordTextBox.Location = new System.Drawing.Point(386, 32);
+            this.sourcePasswordTextBox.Name = "sourcePasswordTextBox";
+            this.sourcePasswordTextBox.Size = new System.Drawing.Size(188, 20);
+            this.sourcePasswordTextBox.TabIndex = 63;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(329, 35);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(53, 13);
+            this.label1.TabIndex = 60;
+            this.label1.Text = "Password";
             // 
             // getSheetsButton
             // 
@@ -515,29 +533,24 @@
             this.tableDownButton.UseVisualStyleBackColor = true;
             this.tableDownButton.Click += new System.EventHandler(this.tableDownButton_Click);
             // 
-            // label1
+            // exportFromGridViewToDbButton
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(329, 35);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(53, 13);
-            this.label1.TabIndex = 60;
-            this.label1.Text = "Password";
+            this.exportFromGridViewToDbButton.Location = new System.Drawing.Point(623, 593);
+            this.exportFromGridViewToDbButton.Name = "exportFromGridViewToDbButton";
+            this.exportFromGridViewToDbButton.Size = new System.Drawing.Size(89, 20);
+            this.exportFromGridViewToDbButton.TabIndex = 66;
+            this.exportFromGridViewToDbButton.Text = "Export to DB";
+            this.exportFromGridViewToDbButton.UseVisualStyleBackColor = true;
+            this.exportFromGridViewToDbButton.Visible = false;
+            this.exportFromGridViewToDbButton.Click += new System.EventHandler(this.exportFromGridViewToDbButton_Click);
             // 
-            // sourcePasswordTextBox
-            // 
-            this.sourcePasswordTextBox.BackColor = System.Drawing.SystemColors.Window;
-            this.sourcePasswordTextBox.Location = new System.Drawing.Point(386, 32);
-            this.sourcePasswordTextBox.Name = "sourcePasswordTextBox";
-            this.sourcePasswordTextBox.Size = new System.Drawing.Size(188, 20);
-            this.sourcePasswordTextBox.TabIndex = 63;
-            // 
-            // mainForm
+            // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(952, 618);
             this.ControlBox = false;
+            this.Controls.Add(this.exportFromGridViewToDbButton);
             this.Controls.Add(this.tableDownButton);
             this.Controls.Add(this.tableUpButton);
             this.Controls.Add(this.tableCloneButton);
@@ -562,7 +575,8 @@
             this.Controls.Add(this.previewGridView);
             this.Controls.Add(this.masterQueryTextBox);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Name = "mainForm";
+            this.Name = "MainForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Report generator";
             this.Load += new System.EventHandler(this.mainForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.previewGridView)).EndInit();
@@ -622,6 +636,7 @@
         private System.Windows.Forms.Button tableDownButton;
         private System.Windows.Forms.TextBox sourcePasswordTextBox;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button exportFromGridViewToDbButton;
     }
 }
 

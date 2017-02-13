@@ -16,7 +16,7 @@ using System.Data.OleDb;
 
 namespace Report_generator
 {
-    public partial class mainForm : Form
+    public partial class MainForm : Form
     {
         public const string appVersion = "2.0.1.0";
         //public ADOX.Catalog storageDbCatalog;
@@ -43,7 +43,7 @@ namespace Report_generator
             Extracting,
             Downloading
         }
-        public mainForm() 
+        public MainForm() 
         { 
             InitializeComponent();
             this.Text = "The Extractor v " + appVersion; /* App label */
@@ -109,9 +109,9 @@ namespace Report_generator
             if (queryString == "") { queryString = "SELECT * FROM [" + this.excelFileSheetsComboBox.Text.Replace("'", "") + "$]"; /*+ "$B1:G3]"*/ }
             this.queryTextBox.Text = queryString;
 
+            LoadForm.ShowLoadForm();
             FillPreviewGridView(excelFilePath, ref queryString);
-
-            //queryTextBox.Text = queryString;
+            LoadForm.CloseForm();
         }
         private void FillPreviewGridView(string excelFilePath, ref string queryString)
         {
@@ -238,10 +238,11 @@ namespace Report_generator
             if (dataObjectsListView.SelectedItems.Count == 0) { return; }
 
             DataObject currentDataObject = dataObjectCollecion[dataObjectsListView.SelectedItems[0].SubItems[0].Text];
+            //LoadForm.ShowLoadForm();
             try { previewGridView.DataSource = currentDataObject.DataTable; } catch { }
-            queryTextBox.Text = currentDataObject.SqlQuery;
+            //LoadForm.CloseForm();
 
-            //DemSwitchez(0);
+            queryTextBox.Text = currentDataObject.SqlQuery;
             excelFilePathTextBox.Text = currentDataObject.ExcelFilePath;
             excelFileSheetsComboBox.Text = currentDataObject.ExcelFileSheet;
             persStorageCheckBox.Checked = currentDataObject.PersStorage;
@@ -293,7 +294,10 @@ namespace Report_generator
             if (this.previewGridView.DataSource == null) { return; }
             string savePath = FunRepository.BrowseSavePath("xls");
             if (savePath == "") { return; }
-            FunRepository.DataTableToExcelFileWithInterop(this.previewGridView.DataSource as System.Data.DataTable, savePath);
+            //pickup messages while loading
+            //LoadForm.ShowLoadForm(); 
+                FunRepository.DataTableToExcelFileWithInterop(this.previewGridView.DataSource as System.Data.DataTable, savePath);
+            //LoadForm.CloseForm();
         }
         private void tableAddButton_Click(object sender, EventArgs e)
         {
@@ -331,7 +335,11 @@ namespace Report_generator
             {
                 DataObject currentDataObject = dataObjectCollecion[key];
                 if(currentDataObject.RunLoad && currentDataObject.ExcelFilePath != "")
-                { currentDataObject.DataTable = FunRepository.GetDataTable(FunRepository.GetConnectionString(currentDataObject.ExcelFilePath), currentDataObject.SqlQuery); }
+                {
+                    LoadForm.ShowLoadForm();
+                        currentDataObject.DataTable = FunRepository.GetDataTable(FunRepository.GetConnectionString(currentDataObject.ExcelFilePath), currentDataObject.SqlQuery);
+                    LoadForm.CloseForm();
+                }
             }
         }
         private void tableRenameButton_Click(object sender, EventArgs e)
@@ -389,7 +397,6 @@ namespace Report_generator
         }
         private void tableUpButton_Click(object sender, EventArgs e) { MoveDataObjectInList("up"); }
         private void tableDownButton_Click(object sender, EventArgs e) { MoveDataObjectInList("down"); }
-
         private void MoveDataObjectInList(string direction)
         {
             if (dataObjectsListView.SelectedItems.Count == 0) { return; }
@@ -414,6 +421,16 @@ namespace Report_generator
             replacedDataObjectItem.Text = currentDataObjectName;
 
             replacedDataObjectItem.Selected = true;
+        }
+        private void exportFromGridViewToDbButton_Click(object sender, EventArgs e)
+        {
+            if (this.previewGridView.DataSource == null) { return; }
+            string savePath = accessStorageDbPath;
+            if (savePath == "") { return; }
+
+            FunRepository.DataTableToAccess(this.previewGridView.DataSource as System.Data.DataTable, savePath);
+            ClearTempDB();
+
         }
     }
 }
